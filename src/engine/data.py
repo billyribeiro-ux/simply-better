@@ -21,7 +21,8 @@ log = logging.getLogger("engine.data")
 _BASE = "https://financialmodelingprep.com/stable"
 
 # window sizes per timeframe keep each request comfortably under FMP row caps
-_CHUNK_DAYS = {"1min": 4, "5min": 25}
+# (stable API truncates to the most recent ~500-780 rows per response)
+_CHUNK_DAYS = {"1min": 2, "5min": 4}
 
 
 class FMPClient:
@@ -79,10 +80,13 @@ class FMPClient:
             .sort("ts")
         )
         # RTH only: 09:30 <= ts < 16:00 ET
-        df = df.filter(
-            (pl.col("ts").dt.hour() * 60 + pl.col("ts").dt.minute() >= 9 * 60 + 30)
-            & (pl.col("ts").dt.hour() * 60 + pl.col("ts").dt.minute() < 16 * 60)
+        # dt.hour()/dt.minute() are Int8 in polars >= 1.30; cast before the
+        # *60 arithmetic or it overflows and the filter drops every bar
+        mins = (
+            pl.col("ts").dt.hour().cast(pl.Int32) * 60
+            + pl.col("ts").dt.minute().cast(pl.Int32)
         )
+        df = df.filter((mins >= 9 * 60 + 30) & (mins < 16 * 60))
         return df.with_columns(pl.lit(symbol).alias("symbol"))
 
     # ---- daily ------------------------------------------------------------
