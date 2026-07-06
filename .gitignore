@@ -1,0 +1,26 @@
+# engine data cache + research record (never committed)
+data/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# secrets
+.env
+
+# dashboard
+node_modules/
+.svelte-kit/
+dashboard/build/
+
+# dashboard data: engine-written JSONs are ignored EXCEPT the committed
+# sample set, so a fresh clone always renders
+dashboard/static/data/*.json
+!dashboard/static/data/summary.json
+!dashboard/static/data/equity.json
+!dashboard/static/data/signals.json
+!dashboard/static/data/geometry.json
+!dashboard/static/data/attribution.json
