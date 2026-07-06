@@ -120,6 +120,22 @@ class FMPClient:
         self._client.close()
 
 
+def _duck_type(arrow_type: str) -> str:
+    """Map an arrow dtype string to a DuckDB column type for ALTER TABLE."""
+    t = arrow_type.lower()
+    if "timestamp" in t:
+        return "TIMESTAMP"
+    if t.startswith("date"):
+        return "DATE"
+    if "int" in t:
+        return "BIGINT"
+    if "float" in t or "double" in t or "decimal" in t:
+        return "DOUBLE"
+    if "bool" in t:
+        return "BOOLEAN"
+    return "VARCHAR"
+
+
 def _empty_bars() -> pl.DataFrame:
     return pl.DataFrame(
         schema={"ts": pl.Datetime, "open": pl.Float64, "high": pl.Float64,
@@ -209,8 +225,20 @@ class Store:
                 con.register("trades_df", trades.to_arrow())
                 con.execute("CREATE TABLE IF NOT EXISTS trades AS SELECT "
                             "CAST(NULL AS VARCHAR) AS run_id, * FROM trades_df LIMIT 0")
+                # append-only schema evolution: when a later engine version
+                # adds columns, widen the table (old rows keep NULLs) instead
+                # of failing the research record
+                existing = {r[1] for r in
+                            con.execute("PRAGMA table_info('trades')").fetchall()}
+                for name, dtype in zip(trades.columns, trades.to_arrow().schema.types):
+                    if name not in existing:
+                        con.execute(
+                            f'ALTER TABLE trades ADD COLUMN "{name}" {_duck_type(str(dtype))}'
+                        )
+                cols = ", ".join(f'"{c}"' for c in trades.columns)
                 con.execute(
-                    f"INSERT INTO trades SELECT '{run_id}' AS run_id, * FROM trades_df"
+                    f"INSERT INTO trades (run_id, {cols}) "
+                    f"SELECT '{run_id}', * FROM trades_df"
                 )
         finally:
             con.close()
