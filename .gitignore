@@ -1,5 +1,6 @@
-# engine data cache + research record (never committed)
-data/
+# engine data cache + research record (never committed) — root only, so the
+# dashboard's static/data stays trackable
+/data/
 
 # python
 __pycache__/
