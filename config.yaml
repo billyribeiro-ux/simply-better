@@ -1,0 +1,71 @@
+# MIE HOD/LOD Engine — master configuration
+universe: [AAPL, NVDA, AMZN, NFLX, SPY, QQQ, IWM, TSLA]
+
+data:
+  cache_dir: data/parquet
+  db_path: data/engine.duckdb
+  detect_tf: 5min
+  refine_tf: 1min
+
+session:
+  open: "09:30"
+  close: "16:00"
+  flat_by: "15:55"        # all positions closed here — pure day trading
+  no_new_after: "15:00"   # no fresh entries after this
+  min_trigger: "10:00"    # HOD/LOD setups need an established range first
+
+setups:
+  cooldown_bars: 6        # 5-min bars between same-side triggers
+  max_per_side_per_day: 2
+  hod_fade:
+    ext_min_atr: 0.35     # HOD must extend >= this * daily ATR above open
+    wick_frac_min: 0.35   # upper wick as fraction of bar range (rejection)
+  lod_reclaim:
+    ext_min_atr: 0.35
+    wick_frac_min: 0.35
+
+entry:
+  confirm_bars_1m: 15     # 1-min bars allowed for break confirmation
+  tick: 0.01
+
+geometry:
+  # candidate stop/target levels are taken from these quantiles of the
+  # observed MAE / MFE distributions (in ATR units), snapped to the scan grid
+  stop_quantiles: [0.55, 0.65, 0.75, 0.85]
+  target_quantiles: [0.45, 0.55, 0.65, 0.75]
+  vol_regimes: 3          # low / mid / high Garman-Klass vol terciles
+  min_samples: 60         # per (setup, regime) cell before it trusts itself
+  scan_grid: {start: 0.1, stop: 3.0, step: 0.1}   # ATR multiples
+
+model:
+  params:
+    num_leaves: 31
+    learning_rate: 0.05
+    n_estimators: 400
+    min_child_samples: 40
+    subsample: 0.9
+    colsample_bytree: 0.9
+    reg_lambda: 1.0
+  walk_forward:
+    min_train_months: 6
+    embargo_days: 5
+  threshold:
+    default: 0.55
+    grid: {start: 0.45, stop: 0.70, step: 0.025}
+    min_trades: 30        # validation trades required to trust an optimized threshold
+
+learning:
+  tree_depth: 3
+  min_leaf_support: 25
+  loss_rate_trigger: 0.55 # leaves losing more than this spawn an adjustment rule
+  threshold_bump: 0.07    # extra probability demanded in flagged regimes
+
+execution:
+  slippage_bps: 2.0
+  commission_per_share: 0.0035
+  risk_per_trade_pct: 0.5 # of current equity, constant-risk sizing
+  max_concurrent: 4
+  starting_equity: 100000
+
+export:
+  out_dir: dashboard/static/data
