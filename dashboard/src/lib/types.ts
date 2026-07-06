@@ -4,6 +4,7 @@
 export interface Summary {
 	generated_at: string;
 	run_id: string;
+	run_type?: string | null;
 	from: string;
 	to: string;
 	universe: string[];
@@ -12,6 +13,30 @@ export interface Summary {
 	per_setup: SetupBreakdown[];
 	feature_importance: FeatureImportance[];
 	folds: number;
+	diagnostics: Diagnostics;
+	anchor_recovery: AnchorRecovery[];
+}
+
+export interface Diagnostics {
+	folds: FoldDiagnostic[];
+	auc_mean_test: number | null;
+}
+
+export interface FoldDiagnostic {
+	fold: string;
+	auc_test: number | null;
+	auc_val: number | null;
+	threshold: number;
+	n_test: number;
+	prob_hist: number[];
+}
+
+export interface AnchorRecovery {
+	setup: string;
+	anchor: string;
+	median: number;
+	p75: number;
+	samples: number;
 }
 
 export interface Kpis {
@@ -94,6 +119,8 @@ export interface GeometryFile {
 export interface GeometryRow {
 	setup: string;
 	regime: number;
+	anchor: string; // "atr" = fixed ATR-multiple targets
+	frac: number; // fraction of anchor distance (0 in atr mode)
 	stop_atr: number;
 	target_atr: number;
 	p_win: number;

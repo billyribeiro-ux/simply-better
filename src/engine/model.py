@@ -17,6 +17,8 @@ from datetime import timedelta
 import numpy as np
 import polars as pl
 from lightgbm import LGBMClassifier
+from sklearn.isotonic import IsotonicRegression
+from sklearn.metrics import roc_auc_score
 
 from .config import Config
 from .features import FEATURES
@@ -34,6 +36,15 @@ class FoldResult:
     threshold: float
     n_train: int
     importance: dict[str, float]
+    auc_test: float | None = None   # ROC AUC on the test fold (None if single-class)
+    auc_val: float | None = None    # ROC AUC on the train-tail validation slice
+    prob_hist: list[int] | None = None  # 20 fixed bins over [0, 1] of test probs
+
+
+def _safe_auc(y: np.ndarray, probs: np.ndarray) -> float | None:
+    if len(y) < 2 or len(np.unique(y)) < 2:
+        return None
+    return float(roc_auc_score(y, probs))
 
 
 def walk_forward(cfg: Config, labeled: pl.DataFrame) -> list[FoldResult]:
@@ -70,36 +81,64 @@ def walk_forward(cfg: Config, labeled: pl.DataFrame) -> list[FoldResult]:
         clf = LGBMClassifier(**mcfg["params"], verbose=-1)
         clf.fit(X_tr, y_tr)
 
-        threshold = _pick_threshold(cfg, clf, train)
+        # chronological tail 20% of train = internal validation slice, shared
+        # by the calibrator and the threshold picker (both see ONLY this slice)
+        cut = int(train.height * 0.8)
+        val = train.sort("entry_ts").tail(train.height - cut)
+        val_raw = (clf.predict_proba(val.select(FEATURES).to_numpy())[:, 1]
+                   if val.height else np.array([]))
+        y_val = val["outcome"].to_numpy() if val.height else np.array([])
 
-        probs = clf.predict_proba(test.select(FEATURES).to_numpy())[:, 1]
+        calibrator = None
+        if (bool(mcfg.get("calibrate", False)) and val.height >= 10
+                and len(np.unique(y_val)) > 1):
+            calibrator = IsotonicRegression(out_of_bounds="clip")
+            calibrator.fit(val_raw, y_val)
+        val_probs = (np.asarray(calibrator.predict(val_raw), dtype=float)
+                     if calibrator is not None else val_raw)
+
+        threshold = _pick_threshold(cfg, val_probs, val)
+
+        raw = clf.predict_proba(test.select(FEATURES).to_numpy())[:, 1]
+        probs = (np.asarray(calibrator.predict(raw), dtype=float)
+                 if calibrator is not None else raw)
         test = test.with_columns(
             pl.Series("prob", probs.astype(float)),
             pl.lit(float(threshold)).alias("threshold"),
             pl.lit(m).alias("fold"),
         )
+        auc_test = _safe_auc(test["outcome"].to_numpy(), probs)
+        # rank on RAW tail probs: isotonic was fit on this slice, so its own
+        # fitted values would report a self-fit-inflated AUC
+        auc_val = _safe_auc(y_val, val_raw)
+        prob_hist = np.histogram(probs, bins=20, range=(0.0, 1.0))[0].astype(int).tolist()
+
         gain = clf.booster_.feature_importance(importance_type="gain")
         imp = {f: float(g) for f, g in zip(FEATURES, gain)}
-        results.append(FoldResult(m, test, float(threshold), train.height, imp))
-        log.info("fold %s: train=%d test=%d thr=%.3f",
-                 m, train.height, test.height, threshold)
+        results.append(FoldResult(m, test, float(threshold), train.height, imp,
+                                  auc_test=auc_test, auc_val=auc_val,
+                                  prob_hist=prob_hist))
+        log.info("fold %s: train=%d test=%d thr=%.3f auc_test=%s auc_val=%s",
+                 m, train.height, test.height, threshold,
+                 f"{auc_test:.3f}" if auc_test is not None else "-",
+                 f"{auc_val:.3f}" if auc_val is not None else "-")
     return results
 
 
-def _pick_threshold(cfg: Config, clf: LGBMClassifier, train: pl.DataFrame) -> float:
+def _pick_threshold(cfg: Config, probs: np.ndarray, val: pl.DataFrame) -> float:
+    """Pick the threshold maximizing realized expectancy on the train tail.
+
+    `probs` are the (calibrated, when enabled) probabilities for `val` — the
+    same values the decision layer will compare against this threshold.
+    """
     tcfg = cfg.model["threshold"]
     default = float(tcfg["default"])
     g = tcfg["grid"]
     grid = np.round(np.arange(g["start"], g["stop"] + 1e-9, g["step"]), 3)
     min_trades = int(tcfg["min_trades"])
 
-    # chronological tail 20% of train = internal validation slice
-    n = train.height
-    cut = int(n * 0.8)
-    val = train.sort("entry_ts").tail(n - cut)
     if val.height < min_trades:
         return default
-    probs = clf.predict_proba(val.select(FEATURES).to_numpy())[:, 1]
     pnl = val["pnl_r"].to_numpy()
 
     best_thr, best_exp = default, -np.inf

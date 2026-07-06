@@ -32,12 +32,16 @@ geometry:
   # candidate stop/target levels are taken from these quantiles of the
   # observed MAE / MFE distributions (in ATR units), snapped to the scan grid
   stop_quantiles: [0.55, 0.65, 0.75, 0.85]
-  target_quantiles: [0.45, 0.55, 0.65, 0.75]
+  target_quantiles: [0.45, 0.55, 0.65, 0.75]   # retained: the "atr" anchor mode
+  anchor_fracs: [0.5, 0.618, 0.786, 1.0]        # fraction of anchor distance
+  anchors: [vwap, day_open, prior_close, pd_poc, dev_poc]
+  min_room_atr: 0.3      # anchor candidates need at least this much runway
   vol_regimes: 3          # low / mid / high Garman-Klass vol terciles
   min_samples: 60         # per (setup, regime) cell before it trusts itself
   scan_grid: {start: 0.1, stop: 3.0, step: 0.1}   # ATR multiples
 
 model:
+  calibrate: true         # isotonic calibration fitted on the train tail only
   params:
     num_leaves: 31
     learning_rate: 0.05

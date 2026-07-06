@@ -13,7 +13,9 @@
 	<dl class="meta num">
 		<div>
 			<dt>run</dt>
-			<dd>{summary.run_id}</dd>
+			<dd>
+				{summary.run_id}{#if summary.run_type}<span class="runtype">{summary.run_type}</span>{/if}
+			</dd>
 		</div>
 		<div>
 			<dt>range</dt>
@@ -65,6 +67,17 @@
 
 	.meta dd {
 		color: var(--ink);
+	}
+
+	.runtype {
+		margin-left: 8px;
+		padding: 1px 7px;
+		border: 1px solid var(--hairline);
+		background: var(--wash);
+		color: var(--graphite);
+		font-size: 10px;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
 	}
 
 	@media (max-width: 640px) {

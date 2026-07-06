@@ -43,6 +43,13 @@ _LABELS = {
     "tod_sin": "time-of-day (sin)",
     "tod_cos": "time-of-day (cos)",
     "side": "side",
+    "room_vwap_atr": "room to VWAP (ATR)",
+    "room_open_atr": "room to open (ATR)",
+    "room_pclose_atr": "room to prior close (ATR)",
+    "room_pdpoc_atr": "room to PD POC (ATR)",
+    "room_dpoc_atr": "room to dev POC (ATR)",
+    "vwap_slope_atr": "VWAP slope (ATR)",
+    "max_room_atr": "max anchor room (ATR)",
 }
 
 

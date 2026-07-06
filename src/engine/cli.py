@@ -59,7 +59,8 @@ def run(
         f"expectancy={k.get('expectancy_r', 0)}R  "
         f"net={k.get('net_pnl_usd', 0)} USD\n"
         f"sharpe={k.get('sharpe', 0)}  PSR={k.get('psr', 0)}  "
-        f"DSR={k.get('deflated_sharpe', 0)}"
+        f"DSR={k.get('deflated_sharpe', 0)}\n"
+        f"AUC(test) mean={artifacts.get('diagnostics', {}).get('auc_mean_test')}"
     )
     if not no_export:
         export_mod.write(cfg, artifacts)

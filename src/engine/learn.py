@@ -26,6 +26,7 @@ import polars as pl
 
 from . import attribution as attr
 from . import backtest, geometry, labeling, metrics, model, setups
+from .anchors import ROOM_FEATURE
 from .config import Config
 from .data import Store
 from .features import daily_context
@@ -90,7 +91,17 @@ def run_pipeline(cfg: Config, d_from: date, d_to: date) -> dict:
 
         geo = geometry.learn(cfg, events, scans, train_ids)
         geo_final = geo
-        n_trials += len(geo.cells) * 16 + 11    # geometry pairs + threshold grid
+        # deflation pays for the FULL search width: per cell, every stop
+        # candidate crossed with every atr target candidate plus every
+        # (anchor x frac) variant; plus the threshold grid per fold
+        gcfg = cfg.geometry
+        n_geo_variants = len(gcfg["stop_quantiles"]) * (
+            len(gcfg["target_quantiles"])
+            + len(gcfg["anchors"]) * len(gcfg["anchor_fracs"])
+        )
+        thr_g = cfg.model["threshold"]["grid"]
+        thr_n = len(np.arange(thr_g["start"], thr_g["stop"] + 1e-9, thr_g["step"]))
+        n_trials += len(geo.cells) * n_geo_variants + thr_n
 
         labeled = labeling.label(
             cfg,
@@ -136,9 +147,12 @@ def run_pipeline(cfg: Config, d_from: date, d_to: date) -> dict:
     clusters = attr.cluster_losses(trades) if trades.height else []
     per_symbol = _breakdown(trades, "symbol")
     per_setup = _breakdown(trades, "setup")
+    diagnostics = _diagnostics(fold_results)
+    anchor_recovery = _anchor_recovery(all_decided)
 
     artifacts = {
         "run_id": uuid.uuid4().hex[:12],
+        "run_type": "exploratory",
         "from": d_from.isoformat(),
         "to": d_to.isoformat(),
         "universe": cfg.universe,
@@ -147,6 +161,8 @@ def run_pipeline(cfg: Config, d_from: date, d_to: date) -> dict:
         "per_setup": per_setup,
         "feature_importance": model.aggregate_importance(fold_results),
         "folds": len(fold_results),
+        "diagnostics": diagnostics,
+        "anchor_recovery": anchor_recovery,
         "geometry": geo_final.rows(),
         "attribution": {
             "rules": attribution.rules_json(),
@@ -168,6 +184,57 @@ def run_pipeline(cfg: Config, d_from: date, d_to: date) -> dict:
         json.dumps(artifacts["attribution"]),
     )
     return artifacts
+
+
+def _diagnostics(fold_results: list[model.FoldResult]) -> dict:
+    """Per-fold AUC + probability-distribution record for the dashboard."""
+    folds = [
+        {
+            "fold": fr.fold,
+            "auc_test": round(fr.auc_test, 4) if fr.auc_test is not None else None,
+            "auc_val": round(fr.auc_val, 4) if fr.auc_val is not None else None,
+            "threshold": round(fr.threshold, 3),
+            "n_test": fr.test.height,
+            "prob_hist": fr.prob_hist or [],
+        }
+        for fr in fold_results
+    ]
+    aucs = [fr.auc_test for fr in fold_results if fr.auc_test is not None]
+    return {
+        "folds": folds,
+        "auc_mean_test": round(float(np.mean(aucs)), 4) if aucs else None,
+    }
+
+
+def _anchor_recovery(decided: pl.DataFrame) -> list[dict]:
+    """Fraction of anchor distance recovered, per (setup, anchor).
+
+    recovery_i = mfe_r_i / max(room_i / stop_atr_i, eps) — how much of the
+    runway to each anchor the trade actually traversed. Median and p75 over
+    decided trades with positive room. This is the empirical answer to
+    "reversion to what?".
+    """
+    if decided.height == 0:
+        return []
+    eps = 1e-9
+    out: list[dict] = []
+    for setup in decided["setup"].unique().sort().to_list():
+        sd = decided.filter(pl.col("setup") == setup)
+        for anchor, key in ROOM_FEATURE.items():
+            if key not in sd.columns:
+                continue
+            g = sd.filter(pl.col(key) > 0)
+            if g.height == 0:
+                continue
+            room_r = (g[key] / g["stop_atr"]).clip(eps)
+            rec = (g["mfe_r"] / room_r)
+            out.append({
+                "setup": setup, "anchor": anchor,
+                "median": round(float(rec.median()), 3),
+                "p75": round(float(rec.quantile(0.75)), 3),
+                "samples": int(g.height),
+            })
+    return out
 
 
 def _breakdown(trades: pl.DataFrame, col: str) -> list[dict]:

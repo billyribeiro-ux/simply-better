@@ -27,6 +27,8 @@
 					<tr>
 						<th scope="col">setup</th>
 						<th scope="col">vol regime</th>
+						<th scope="col">anchor</th>
+						<th scope="col" class="r">frac</th>
 						<th scope="col" class="r">stop ATR</th>
 						<th scope="col" class="r">target ATR</th>
 						<th scope="col" class="r">p(win)</th>
@@ -39,6 +41,8 @@
 						<tr>
 							<td>{row.setup}</td>
 							<td>{regimeLabel(row.regime)}</td>
+							<td>{row.anchor === 'atr' ? 'ATR ×' : row.anchor}</td>
+							<td class="r">{row.anchor === 'atr' ? '—' : fmtNum(row.frac, 3)}</td>
 							<td class="r">{fmtNum(row.stop_atr, 2)}</td>
 							<td class="r">{fmtNum(row.target_atr, 2)}</td>
 							<td class="r">{fmtNum(row.p_win, 3)}</td>

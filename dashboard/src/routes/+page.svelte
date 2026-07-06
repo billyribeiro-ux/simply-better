@@ -6,7 +6,9 @@
 		SignalsFile,
 		Summary
 	} from '$lib/types';
+	import AnchorRecoveryPanel from '$lib/components/AnchorRecoveryPanel.svelte';
 	import AttributionPanel from '$lib/components/AttributionPanel.svelte';
+	import DiagnosticsPanel from '$lib/components/DiagnosticsPanel.svelte';
 	import EquityCurve from '$lib/components/EquityCurve.svelte';
 	import GeometryTable from '$lib/components/GeometryTable.svelte';
 	import KpiStrip from '$lib/components/KpiStrip.svelte';
@@ -95,8 +97,16 @@
 		</section>
 
 		<section class="shell band">
-			<AttributionPanel attribution={d.attribution} />
-			<GeometryTable rows={d.geometry.rows} featureImportance={d.summary.feature_importance} />
+			<div class="col">
+				<AttributionPanel attribution={d.attribution} />
+				<AnchorRecoveryPanel rows={d.summary.anchor_recovery ?? []} />
+			</div>
+			<div class="col">
+				<DiagnosticsPanel
+					diagnostics={d.summary.diagnostics ?? { folds: [], auc_mean_test: null }}
+				/>
+				<GeometryTable rows={d.geometry.rows} featureImportance={d.summary.feature_importance} />
+			</div>
 		</section>
 
 		<section class="shell">
@@ -153,6 +163,13 @@
 		grid-template-columns: 1fr 1fr;
 		gap: 36px;
 		align-items: start;
+	}
+
+	.col {
+		display: flex;
+		flex-direction: column;
+		gap: 36px;
+		min-width: 0;
 	}
 
 	.band > :global(* + *) {

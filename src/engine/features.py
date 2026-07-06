@@ -24,6 +24,14 @@ FEATURES: list[str] = [
     "n_extremes",
     "dow",
     "atr_pct",
+    # iteration two: anchor framework — appended, never reordered
+    "room_vwap_atr",
+    "room_open_atr",
+    "room_pclose_atr",
+    "room_pdpoc_atr",
+    "room_dpoc_atr",
+    "vwap_slope_atr",
+    "max_room_atr",
 ]
 
 

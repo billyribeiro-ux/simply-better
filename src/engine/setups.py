@@ -12,6 +12,7 @@ from datetime import datetime
 import numpy as np
 import polars as pl
 
+from .anchors import PriceHistogram, anchor_prices, anchor_room_atr
 from .config import Config
 
 log = logging.getLogger("engine.setups")
@@ -43,6 +44,9 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
     df = bars5.with_columns(pl.col("ts").dt.date().alias("d")).sort("ts")
     events: list[dict] = []
 
+    # prior-day volume-at-price histogram, carried across the day loop
+    pd_hist: PriceHistogram | None = None
+
     for (day,), g in df.group_by(["d"], maintain_order=True):
         c = ctx_map.get(day)
         if c is None or c["atr"] is None or not np.isfinite(c["atr"]) or c["atr"] <= 0:
@@ -72,11 +76,23 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
         last_trig = {HOD_FADE: -10**9, LOD_RECLAIM: -10**9}
         count = {HOD_FADE: 0, LOD_RECLAIM: 0}
 
+        # anchors: prior-day POC from the carried histogram, developing POC
+        # built incrementally (bin width fixed at session start from prior ATR)
+        pd_poc = pd_hist.poc() if pd_hist is not None and not pd_hist.is_empty() else None
+        day_hist = PriceHistogram(atr)
+        vwap_hist: list[float] = []
+
         for i in range(n):
+            # dev POC at bar i uses volume from bars 0..i-1 ONLY, then bar i
+            # is added — the sequencing that keeps it lookahead-free
+            dev_poc = day_hist.poc()
+            day_hist.add_bar(h[i], lo[i], cl[i], v[i])
+
             typ = (h[i] + lo[i] + cl[i]) / 3.0
             cum_pv += typ * v[i]
             cum_v += v[i]
             vwap = cum_pv / cum_v if cum_v > 0 else cl[i]
+            vwap_hist.append(vwap)
 
             new_hod = h[i] > hod
             new_lod = lo[i] < lod
@@ -110,6 +126,23 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
             ret_30m = (cl[i] - cl[max(0, i - 6)]) / atr
             minutes_since_open = mins - _hm(cfg.session["open"])
             frac = minutes_since_open / (6.5 * 60.0)
+
+            apx = anchor_prices(
+                vwap, float(day_open),
+                float(prior_close) if np.isfinite(prior_close) else None,
+                pd_poc, dev_poc,
+            )
+            vwap_slope = (vwap - vwap_hist[i - 6]) / atr if i >= 6 else 0.0
+
+            def rooms_for(side: float) -> dict[str, float]:
+                return {
+                    "room_vwap_atr": anchor_room_atr(apx["vwap"], cl[i], side, atr),
+                    "room_open_atr": anchor_room_atr(apx["day_open"], cl[i], side, atr),
+                    "room_pclose_atr": anchor_room_atr(apx["prior_close"], cl[i], side, atr),
+                    "room_pdpoc_atr": anchor_room_atr(apx["pd_poc"], cl[i], side, atr),
+                    "room_dpoc_atr": anchor_room_atr(apx["dev_poc"], cl[i], side, atr),
+                }
+
             base = {
                 "symbol": symbol,
                 "session_date": day,
@@ -133,6 +166,8 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
                 "dow": float(day.weekday()),
                 "atr_pct": float(atr / prior_close * 100.0)
                 if np.isfinite(prior_close) and prior_close > 0 else 0.0,
+                "anchor_px": apx,
+                "vwap_slope_atr": float(vwap_slope),
             }
 
             # ---- HOD FADE (short) ----------------------------------------
@@ -144,8 +179,11 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
                 and count[HOD_FADE] < max_side
                 and i - last_trig[HOD_FADE] >= cooldown
             ):
+                rooms = rooms_for(-1.0)
                 events.append({
                     **base,
+                    **rooms,
+                    "max_room_atr": float(max(rooms.values())),
                     "setup": HOD_FADE,
                     "side": -1.0,
                     "level": float(hod),
@@ -165,8 +203,11 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
                 and count[LOD_RECLAIM] < max_side
                 and i - last_trig[LOD_RECLAIM] >= cooldown
             ):
+                rooms = rooms_for(1.0)
                 events.append({
                     **base,
+                    **rooms,
+                    "max_room_atr": float(max(rooms.values())),
                     "setup": LOD_RECLAIM,
                     "side": 1.0,
                     "level": float(lod),
@@ -176,6 +217,9 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
                 })
                 last_trig[LOD_RECLAIM] = i
                 count[LOD_RECLAIM] += 1
+
+        # finished session becomes the prior-day histogram for the next one
+        pd_hist = day_hist
 
     log.info("[%s] %d setup events", symbol, len(events))
     return events

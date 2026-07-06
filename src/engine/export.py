@@ -18,6 +18,7 @@ def write(cfg: Config, artifacts: dict) -> Path:
     summary = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "run_id": artifacts["run_id"],
+        "run_type": artifacts.get("run_type"),
         "from": artifacts["from"],
         "to": artifacts["to"],
         "universe": artifacts["universe"],
@@ -26,6 +27,8 @@ def write(cfg: Config, artifacts: dict) -> Path:
         "per_setup": artifacts["per_setup"],
         "feature_importance": artifacts["feature_importance"],
         "folds": artifacts["folds"],
+        "diagnostics": artifacts.get("diagnostics", {"folds": [], "auc_mean_test": None}),
+        "anchor_recovery": artifacts.get("anchor_recovery", []),
     }
     _dump(out / "summary.json", summary)
     _dump(out / "equity.json", artifacts["equity"])

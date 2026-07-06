@@ -177,7 +177,9 @@ def label(cfg: Config, events: list[dict], scans: dict[int, PathScan],
         scan = scans.get(eid)
         if scan is None:
             continue
-        stop_atr, target_atr = geometry_lookup(ev)
+        stop_atr, target_atr, tradable = geometry_lookup(ev)
+        if not tradable:
+            continue    # anchor geometry refused it — same status as unconfirmed
         win, pnl_r, reason, xi = outcome_for(scan, grid, stop_atr, target_atr)
         atr, side = float(ev["atr"]), float(ev["side"])
         stop_px = scan.entry_px + side * -1 * stop_atr * atr
@@ -219,4 +221,6 @@ _FEATURE_KEYS = [
     "minutes_since_open", "tod_sin", "tod_cos", "gap_pct", "range_ext_atr",
     "vol_z", "dist_vwap_atr", "prior_high_dist_atr", "prior_low_dist_atr",
     "gk_vol_z", "ret_30m_atr", "wick_ratio", "n_extremes", "dow", "atr_pct",
+    "room_vwap_atr", "room_open_atr", "room_pclose_atr", "room_pdpoc_atr",
+    "room_dpoc_atr", "vwap_slope_atr", "max_room_atr",
 ]
