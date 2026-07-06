@@ -18,7 +18,7 @@ from .config import Config
 
 log = logging.getLogger("engine.data")
 
-_BASE = "https://financialmodelingprep.com/api/v3"
+_BASE = "https://financialmodelingprep.com/stable"
 
 # window sizes per timeframe keep each request comfortably under FMP row caps
 _CHUNK_DAYS = {"1min": 4, "5min": 25}
@@ -57,8 +57,8 @@ class FMPClient:
         while cur <= d_to:
             end = min(cur + step - timedelta(days=1), d_to)
             rows = self._get(
-                f"{_BASE}/historical-chart/{tf}/{symbol}",
-                {"from": cur.isoformat(), "to": end.isoformat()},
+                f"{_BASE}/historical-chart/{tf}",
+                {"symbol": symbol, "from": cur.isoformat(), "to": end.isoformat()},
             )
             if isinstance(rows, list) and rows:
                 frames.append(pl.DataFrame(rows))
@@ -88,10 +88,11 @@ class FMPClient:
     # ---- daily ------------------------------------------------------------
     def daily(self, symbol: str, d_from: date, d_to: date) -> pl.DataFrame:
         payload = self._get(
-            f"{_BASE}/historical-price-full/{symbol}",
-            {"from": d_from.isoformat(), "to": d_to.isoformat()},
+            f"{_BASE}/historical-price-eod/full",
+            {"symbol": symbol, "from": d_from.isoformat(), "to": d_to.isoformat()},
         )
-        hist = payload.get("historical", []) if isinstance(payload, dict) else []
+        # stable API returns a flat list; legacy wrapped it in {"historical": []}
+        hist = payload if isinstance(payload, list) else payload.get("historical", [])
         if not hist:
             return pl.DataFrame(
                 schema={"date": pl.Date, "open": pl.Float64, "high": pl.Float64,
