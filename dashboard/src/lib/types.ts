@@ -128,6 +128,42 @@ export interface GeometryRow {
 	samples: number;
 }
 
+// /data/live.json — written by `mie live`; may be absent until the first run
+export interface LiveFile {
+	generated_at: string;
+	session_date: string;
+	as_of_et: string;
+	trained_through: string;
+	threshold_base: number;
+	equity: number;
+	signals: LiveSignal[];
+	note?: string;
+}
+
+export interface LiveSignal {
+	id: string;
+	symbol: string;
+	setup: 'HOD_FADE' | 'LOD_RECLAIM';
+	side: 'SHORT' | 'LONG';
+	trigger_ts: string;
+	prob: number;
+	threshold: number;
+	taken: boolean;
+	tradable: boolean;
+	anchor: string;
+	frac: number;
+	stop_atr: number;
+	target_atr: number;
+	entry_trigger_px: number;
+	stop_px: number;
+	target_px: number;
+	shares: number;
+	status: 'awaiting' | 'confirmed' | 'expired';
+	entry_ts: string | null;
+	entry_px: number | null;
+	max_room_atr: number;
+}
+
 // /data/attribution.json
 export interface Attribution {
 	rules: AdjustmentRule[];

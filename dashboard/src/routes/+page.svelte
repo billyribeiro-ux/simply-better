@@ -3,6 +3,7 @@
 		Attribution,
 		Equity,
 		GeometryFile,
+		LiveFile,
 		SignalsFile,
 		Summary
 	} from '$lib/types';
@@ -12,6 +13,7 @@
 	import EquityCurve from '$lib/components/EquityCurve.svelte';
 	import GeometryTable from '$lib/components/GeometryTable.svelte';
 	import KpiStrip from '$lib/components/KpiStrip.svelte';
+	import LiveSignalsPanel from '$lib/components/LiveSignalsPanel.svelte';
 	import Masthead from '$lib/components/Masthead.svelte';
 	import SignalsTable from '$lib/components/SignalsTable.svelte';
 	import TickerRail from '$lib/components/TickerRail.svelte';
@@ -30,6 +32,7 @@
 		| { status: 'ready'; data: RunData };
 
 	let view = $state<View>({ status: 'loading' });
+	let liveFile = $state<LiveFile | null>(null);
 
 	async function fetchJson<T>(path: string): Promise<T> {
 		const res = await fetch(path);
@@ -55,6 +58,13 @@
 				if (!cancelled) {
 					view = { status: 'error', message: err instanceof Error ? err.message : String(err) };
 				}
+			}
+			// live feed is optional — absent until the first `mie live` run
+			try {
+				const lf = await fetchJson<LiveFile>('/data/live.json');
+				if (!cancelled) liveFile = lf;
+			} catch {
+				if (!cancelled) liveFile = null;
 			}
 		})();
 		return () => {
@@ -86,6 +96,10 @@
 		{/if}
 
 		<TickerRail universe={d.summary.universe} perSymbol={d.summary.per_symbol} />
+
+		{#if liveFile}
+			<LiveSignalsPanel live={liveFile} />
+		{/if}
 
 		<div class="shell">
 			<KpiStrip kpis={d.summary.kpis} />

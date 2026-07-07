@@ -68,6 +68,52 @@ cd dashboard && pnpm install && pnpm dev
 dashboard ships with committed sample data (`run_id: "SAMPLE"`) so a fresh
 clone renders immediately; a real `mie run` overwrites it.
 
+## Backtest vs live
+
+The walk-forward backtest is the validation device; the live path is its
+production twin, built from the same code: same detector and features
+(`setups.detect`), same fitting function (`model.fit_scored_model` — shared
+byte-for-byte with every walk-forward fold), same geometry lookup, same
+1-minute confirmation scan, same sizing arithmetic. Train/serve parity is
+asserted by `tests/test_live_path.py`.
+
+```bash
+# 1. train the production model on everything cached (run ingest first)
+mie train --from 2025-01-02 --to 2026-07-03
+
+# 2. one-shot scan of today's session (US/Eastern)
+mie live
+
+# 3. keep scanning every 60s until the 15:55 ET flat-by
+mie live --poll 60
+
+# 4. replay any cached past session (dry run / verification)
+mie live --date 2026-06-25 --no-refresh
+```
+
+Each scan refreshes FMP data (unless `--no-refresh`), prints the signal
+table, writes `dashboard/static/data/live.json` for the terminal's Live
+panel, and appends to the DuckDB `live_signals` record. Signals carry the
+planned entry stop-order price (the 1-min break level), stop, target,
+constant-risk share count (sized from `execution.starting_equity`), the
+model's probability vs its effective threshold, and a status: `awaiting`
+(inside the 15-bar confirmation window), `confirmed` (break traded, actual
+entry shown), or `expired` (window passed without a break).
+
+Live caveats, stated plainly: intraday data freshness is bounded by your
+FMP plan tier (delayed feeds produce delayed signals); the detector needs
+8 completed 5-minute bars, so the earliest trigger of a session surfaces a
+few minutes after its bar closes (bounded latency, never lookahead); and
+this is a **signal feed only — no broker connection, no order routing**.
+Retrain (`mie train`) after each `mie ingest` refresh; the loader refuses a
+model whose feature set no longer matches the code.
+
+Suggested cron (ET session, weekdays):
+
+```cron
+35 9 * * 1-5  cd /path/to/repo && .venv/bin/mie live --poll 60
+```
+
 ```bash
 # verification
 python3 -m py_compile src/engine/*.py   # compiles clean
