@@ -107,6 +107,7 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
     probs = model.score(bundle.fm, X)
     scans = labeling.scan_paths(cfg, today, bars1)
     attribution = Attribution(rules=list(bundle.rules))
+    gate_max = float(cfg.setups.get("day_type", {}).get("eff_gate_max", 1e9))
 
     signals: list[dict] = []
     for j, ev in enumerate(today):
@@ -118,7 +119,9 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
             bundle.geometry.fallback)
         eff_thr = attribution.effective_threshold(ev, bundle.fm.threshold, LIVE_FOLD)
         prob = float(probs[j])
-        taken = bool(tradable and prob >= eff_thr)
+        # same trend veto as the research decide loop (frozen config)
+        trend_veto = float(ev.get("dt_eff_h1_aligned", 0.0)) > gate_max
+        taken = bool(tradable and prob >= eff_thr and not trend_veto)
 
         # planned entry = the 1-min break level (stop-market order price)
         brk = (float(ev["trigger_low"]) - tick if side < 0
@@ -150,6 +153,8 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
             "threshold": round(float(eff_thr), 3),
             "taken": taken,
             "tradable": bool(tradable),
+            "trend_veto": bool(trend_veto),
+            "day_type_eff": round(float(ev.get("dt_eff_h1_aligned", 0.0)), 3),
             "anchor": cell.anchor,
             "frac": cell.frac,
             "stop_atr": round(float(stop_atr), 2),

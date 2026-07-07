@@ -63,7 +63,15 @@
 									class:expired={s.status === 'expired'}>{s.status}</span
 								>
 							</td>
-							<td class:gain={s.taken}>{s.taken ? 'TAKE' : s.tradable ? 'skip' : 'no room'}</td>
+							<td class:gain={s.taken}>
+								{s.taken
+									? 'TAKE'
+									: !s.tradable
+										? 'no room'
+										: s.trend_veto
+											? 'trend day'
+											: 'skip'}
+							</td>
 						</tr>
 					{/each}
 				</tbody>

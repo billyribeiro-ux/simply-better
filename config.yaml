@@ -11,12 +11,22 @@ session:
   open: "09:30"
   close: "16:00"
   flat_by: "15:55"        # all positions closed here — pure day trading
-  no_new_after: "15:00"   # no fresh entries after this
+  # no fresh entries after this. 14:50 (was 15:00): the final two trigger
+  # bars leave no time to traverse runway — window hygiene adopted at ZERO
+  # expectancy credit (2026-07 research program; replicated in 3 runs).
+  # NOTE: gates on the trigger bar's OPEN timestamp (setups.detect).
+  no_new_after: "14:50"
   min_trigger: "10:00"    # HOD/LOD setups need an established range first
 
 setups:
   cooldown_bars: 6        # 5-min bars between same-side triggers
   max_per_side_per_day: 2
+  day_type:
+    # decision-layer trend veto: skip triggers whose aligned first-hour
+    # directional efficiency exceeds this (fading a trending session).
+    # FROZEN at 0.45 (2026-07 research program) — retuning on the mined
+    # range restarts the multiplicity clock.
+    eff_gate_max: 0.45
   hod_fade:
     ext_min_atr: 0.35     # HOD must extend >= this * daily ATR above open
     wick_frac_min: 0.35   # upper wick as fraction of bar range (rejection)
@@ -44,6 +54,10 @@ model:
   calibrate: true         # isotonic calibration on out-of-fold train probs
   oof_folds: 4            # expanding chronological blocks for OOF probabilities
   ensemble_seeds: 3       # seed-bagged LightGBM members, probabilities averaged
+  # research-program trials charged into DSR deflation on top of the
+  # geometry x threshold search: 11 entry-timing + 20 loss-filters +
+  # 19 features + 38 symbol-gating + 20 exits + 40 regime-gating (2026-07)
+  external_trials: 148
   params:
     num_leaves: 31
     learning_rate: 0.05

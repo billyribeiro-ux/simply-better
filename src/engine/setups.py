@@ -82,6 +82,13 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
         day_hist = PriceHistogram(atr)
         vwap_hist: list[float] = []
 
+        # day-type: directional efficiency of the session, frozen by WALL
+        # CLOCK at the last 5-min bar closing <= 10:30 (bar-index freezing
+        # breaks on sessions with non-contiguous first hours); before the
+        # freeze it is efficiency-so-far
+        cum_path = 0.0
+        eff_frozen = 0.0
+
         for i in range(n):
             # dev POC at bar i uses volume from bars 0..i-1 ONLY, then bar i
             # is added — the sequencing that keeps it lookahead-free
@@ -93,6 +100,12 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
             cum_v += v[i]
             vwap = cum_pv / cum_v if cum_v > 0 else cl[i]
             vwap_hist.append(vwap)
+
+            cum_path += abs(cl[i] - day_open) if i == 0 else abs(cl[i] - cl[i - 1])
+            eff_i = (cl[i] - day_open) / cum_path if cum_path > 0 else 0.0
+            bar_close_mins = ts[i].hour * 60 + ts[i].minute + 5
+            if bar_close_mins <= 10 * 60 + 30:
+                eff_frozen = eff_i
 
             new_hod = h[i] > hod
             new_lod = lo[i] < lod
@@ -184,6 +197,9 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
                     **base,
                     **rooms,
                     "max_room_atr": float(max(rooms.values())),
+                    # aligned first-hour efficiency: positive = session trending
+                    # against this fade (NOT in FEATURES — decision-layer gate)
+                    "dt_eff_h1_aligned": float(-(-1.0) * eff_frozen),
                     "setup": HOD_FADE,
                     "side": -1.0,
                     "level": float(hod),
@@ -208,6 +224,7 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
                     **base,
                     **rooms,
                     "max_room_atr": float(max(rooms.values())),
+                    "dt_eff_h1_aligned": float(-(1.0) * eff_frozen),
                     "setup": LOD_RECLAIM,
                     "side": 1.0,
                     "level": float(lod),

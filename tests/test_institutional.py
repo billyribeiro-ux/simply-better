@@ -167,3 +167,107 @@ class TestBootstrapCI:
         lo, hi = out["expectancy_r_ci"]
         assert lo <= out["expectancy_r"] <= hi
         assert out["sharpe_ci"][0] <= out["sharpe"] <= out["sharpe_ci"][1]
+
+
+# ---------------------------------------------------------------------------
+# slippage direction (invariant 7: charged AGAINST the trade)
+# ---------------------------------------------------------------------------
+class TestSlippageDirection:
+    def test_long_and_short_both_pay(self, cfg):
+        d = date(2026, 3, 2)
+
+        def scratch_trade(side: float) -> pl.DataFrame:
+            # entry == exit: gross must be NEGATIVE once slippage is charged
+            return pl.DataFrame([{
+                "session_date": d,
+                "entry_ts": datetime(2026, 3, 2, 10, 0),
+                "exit_ts": datetime(2026, 3, 2, 11, 0),
+                "side": side, "stop_atr": 1.0, "atr": 4.0,
+                "entry_px": 100.0, "exit_px": 100.0,
+            }])
+
+        for side in (1.0, -1.0):
+            trades, _, _ = backtest.run(cfg, scratch_trade(side))
+            assert trades.height == 1
+            assert float(trades["pnl_usd"][0]) < 0, f"side={side} was not charged"
+
+
+# ---------------------------------------------------------------------------
+# day-type trend veto plumbing
+# ---------------------------------------------------------------------------
+def _lod_eff_expected(bars):
+    cl = [b[3] for b in bars]
+    path = abs(cl[0] - 100.0) + sum(abs(cl[k] - cl[k - 1]) for k in range(1, 8))
+    return (cl[7] - 100.0) / path
+
+
+class TestTrendVeto:
+    def test_setups_emit_aligned_efficiency(self, cfg):
+        # crafted up-off-the-open day: HOD_FADE fights the move (positive
+        # aligned efficiency), LOD_RECLAIM rides it (negative)
+        from engine import setups
+        day = date(2025, 3, 10)
+        bars = [
+            (100.00, 100.20, 99.80, 100.10, 1000.0),
+            (100.10, 100.30, 99.90, 100.00, 1200.0),
+            (100.00, 100.10, 99.70, 99.90, 900.0),
+            (99.99, 100.02, 100.00, 100.01, 50000.0),
+            (100.01, 100.25, 99.85, 100.05, 1100.0),
+            (100.05, 100.30, 99.90, 100.15, 1000.0),
+            (101.20, 102.00, 100.90, 101.00, 8000.0),   # HOD_FADE @10:00
+            (99.30, 99.70, 99.00, 99.60, 800.0),        # LOD_RECLAIM @10:05
+            (99.60, 99.80, 99.40, 99.70, 900.0),
+            (99.70, 99.90, 99.50, 99.80, 900.0),
+        ]
+        t0 = datetime(2025, 3, 10, 9, 30)
+        b5 = pl.DataFrame(
+            [(t0 + timedelta(minutes=5 * i), o, h, lo, c, v, "TEST")
+             for i, (o, h, lo, c, v) in enumerate(bars)],
+            schema=["ts", "open", "high", "low", "close", "volume", "symbol"],
+            orient="row")
+        ctx = pl.DataFrame({
+            "date": [day], "atr": [2.0], "gk_vol_z": [0.0],
+            "prior_high": [100.5], "prior_low": [99.5], "prior_close": [100.0],
+        })
+        events = setups.detect(cfg, "TEST", b5, ctx)
+        by = {e["setup"]: e for e in events}
+        hod, lod = by["HOD_FADE"], by["LOD_RECLAIM"]
+        assert hod["dt_eff_h1_aligned"] > 0
+        # independently recompute eff at the HOD trigger bar (bars 0..6)
+        cl = [b[3] for b in bars]
+        path = abs(cl[0] - 100.0) + sum(abs(cl[k] - cl[k - 1]) for k in range(1, 7))
+        eff = (cl[6] - 100.0) / path
+        assert hod["dt_eff_h1_aligned"] == pytest.approx(eff)
+        assert lod["dt_eff_h1_aligned"] == pytest.approx(-_lod_eff_expected(bars))
+
+
+# ---------------------------------------------------------------------------
+# PathScan research instrumentation
+# ---------------------------------------------------------------------------
+class TestPathInstrumentation:
+    def test_paths_stored_and_consistent(self, cfg):
+        from engine import labeling
+        day = date(2025, 3, 10)
+        t0 = datetime(2025, 3, 10, 10, 0)
+        ev = {
+            "symbol": "TEST", "session_date": day, "trigger_ts": t0,
+            "trigger_low": 100.0, "trigger_high": 101.0,
+            "side": -1.0, "atr": 2.0,
+        }
+        t1 = datetime(2025, 3, 10, 10, 5)
+        b1 = pl.DataFrame(
+            [(t1 + timedelta(minutes=i), 99.9, 100.1, 99.5 - 0.02 * i,
+              99.8 - 0.02 * i, 500.0, "TEST") for i in range(30)],
+            schema=["ts", "open", "high", "low", "close", "volume", "symbol"],
+            orient="row")
+        scans = labeling.scan_paths(cfg, [ev], {"TEST": b1})
+        assert 0 in scans
+        s = scans[0]
+        n = len(s.cross_ts)
+        assert s.fav_path is not None and len(s.fav_path) == n
+        assert s.adv_path is not None and len(s.adv_path) == n
+        assert s.close_path is not None and len(s.close_path) == n
+        assert float(s.close_path[-1]) == pytest.approx(s.eod_px, abs=1e-4)
+        # signed eod excursion consistent with the stored close path (short)
+        assert s.eod_signed_atr == pytest.approx(
+            (s.entry_px - float(s.close_path[-1])) / 2.0, abs=1e-4)

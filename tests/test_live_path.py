@@ -169,6 +169,7 @@ class TestScoringPlumbingParity:
         ex = cfg.execution
         risk_usd = float(ex["starting_equity"]) * float(ex["risk_per_trade_pct"]) / 100.0
 
+        gate_max = float(cfg.setups.get("day_type", {}).get("eff_gate_max", 1e9))
         for ev, prob, sig in zip(today, probs, report["signals"]):
             assert sig["symbol"] == ev["symbol"]
             assert sig["prob"] == pytest.approx(float(prob), abs=5e-4)
@@ -176,7 +177,9 @@ class TestScoringPlumbingParity:
             assert sig["threshold"] == pytest.approx(eff, abs=5e-4)
             stop_atr, target_atr, tradable = bundle.geometry.lookup(ev)
             assert sig["tradable"] == tradable
-            assert sig["taken"] == (tradable and float(prob) >= eff)
+            veto = float(ev.get("dt_eff_h1_aligned", 0.0)) > gate_max
+            assert sig["trend_veto"] == veto
+            assert sig["taken"] == (tradable and float(prob) >= eff and not veto)
             if sig["shares"] and stop_atr * ev["atr"] > 0:
                 assert sig["shares"] == int(risk_usd // (stop_atr * ev["atr"]))
 

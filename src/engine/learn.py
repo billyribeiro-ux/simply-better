@@ -141,11 +141,15 @@ def run_research(cfg: Config, d_from: date, d_to: date) -> ResearchState:
         fold_results.append(fr)
 
         # decide takes with attribution-adjusted thresholds (rules < fold only)
+        # plus the day-type trend veto (frozen config, applied identically in
+        # live.scan_live — an execution-time gate, never a detection filter)
+        gate_max = float(cfg.setups.get("day_type", {}).get("eff_gate_max", 1e9))
         take_rows = []
         for row in fr.test.iter_rows(named=True):
             eff = attribution.effective_threshold(row, fr.threshold, fold_m)
             row["threshold"] = eff
-            row["taken"] = bool(row["prob"] >= eff)
+            trend_veto = float(row.get("dt_eff_h1_aligned", 0.0)) > gate_max
+            row["taken"] = bool(row["prob"] >= eff and not trend_veto)
             take_rows.append(row)
         fold_df = pl.DataFrame(take_rows)
         taken_frames.append(fold_df)
@@ -158,6 +162,10 @@ def run_research(cfg: Config, d_from: date, d_to: date) -> ResearchState:
 
     if not taken_frames:
         raise RuntimeError("walk-forward produced no folds — widen the range")
+
+    # research-program searches outside this loop also mined this range —
+    # charge them into the deflation once (config-declared ledger)
+    n_trials += int(cfg.model.get("external_trials", 0))
 
     all_decided = pl.concat(taken_frames, how="vertical_relaxed")
     taken = all_decided.filter(pl.col("taken"))

@@ -152,6 +152,8 @@ export interface LiveSignal {
 	threshold: number;
 	taken: boolean;
 	tradable: boolean;
+	trend_veto?: boolean;
+	day_type_eff?: number;
 	anchor: string;
 	frac: number;
 	stop_atr: number;

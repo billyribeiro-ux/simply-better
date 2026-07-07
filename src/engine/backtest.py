@@ -58,8 +58,10 @@ def run(cfg: Config, taken: pl.DataFrame) -> tuple[pl.DataFrame, list[date], np.
         if shares < 1:
             continue
 
-        entry_fill = float(r["entry_px"]) * (1.0 - side * slip)   # against us
-        exit_fill = float(r["exit_px"]) * (1.0 + side * slip)     # against us
+        # slippage charged AGAINST the trade (invariant 7): longs enter
+        # higher / exit lower, shorts enter lower / exit higher
+        entry_fill = float(r["entry_px"]) * (1.0 + side * slip)
+        exit_fill = float(r["exit_px"]) * (1.0 - side * slip)
         gross = side * (exit_fill - entry_fill) * shares
         pnl = gross - comm * shares * 2.0
         equity += pnl

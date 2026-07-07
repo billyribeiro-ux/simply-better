@@ -37,12 +37,16 @@ class PathScan:
     """Per-event first-crossing record over the ATR-multiple grid."""
 
     __slots__ = ("event_id", "entry_ts", "entry_px", "adv_cross", "fav_cross",
-                 "eod_signed_atr", "eod_ts", "eod_px", "cross_ts")
+                 "eod_signed_atr", "eod_ts", "eod_px", "cross_ts",
+                 "fav_path", "adv_path", "close_path")
 
     def __init__(self, event_id: int, entry_ts: datetime, entry_px: float,
                  adv_cross: np.ndarray, fav_cross: np.ndarray,
                  eod_signed_atr: float, eod_ts: datetime, eod_px: float,
-                 cross_ts: list[datetime]) -> None:
+                 cross_ts: list[datetime],
+                 fav_path: np.ndarray | None = None,
+                 adv_path: np.ndarray | None = None,
+                 close_path: np.ndarray | None = None) -> None:
         self.event_id = event_id
         self.entry_ts = entry_ts
         self.entry_px = entry_px
@@ -52,6 +56,13 @@ class PathScan:
         self.eod_ts = eod_ts
         self.eod_px = eod_px
         self.cross_ts = cross_ts        # bar timestamps of the walked path
+        # research instrumentation (float32, per-bar, entry -> flat_by):
+        # signed excursions in ATR units and raw closes. Exit research MUST
+        # stay zero-lookahead: decisions at bar t use paths[:t+1] only, and
+        # same-bar ties resolve against the trade (mirror outcome_for).
+        self.fav_path = fav_path
+        self.adv_path = adv_path
+        self.close_path = close_path
 
 
 def scan_paths(cfg: Config, events: list[dict],
@@ -149,6 +160,8 @@ def scan_paths(cfg: Config, events: list[dict],
             adv_cross=adv_cross, fav_cross=fav_cross,
             eod_signed_atr=float(eod_signed),
             eod_ts=path_ts[-1], eod_px=float(cc[-1]), cross_ts=path_ts,
+            fav_path=fav.astype(np.float32), adv_path=adv.astype(np.float32),
+            close_path=cc.astype(np.float32),
         )
     log.info("confirmed entries: %d / %d events", len(scans), len(events))
     return scans
@@ -206,6 +219,8 @@ def label(cfg: Config, events: list[dict], scans: dict[int, PathScan],
             "exit_reason": reason, "outcome": int(win),
             "pnl_r": float(pnl_r), "mae_r": float(mae_r), "mfe_r": float(mfe_r),
             "atr": atr,
+            # decision-layer gate input — deliberately NOT in FEATURES
+            "dt_eff_h1_aligned": float(ev.get("dt_eff_h1_aligned", 0.0)),
             **{k: float(ev[k]) for k in _FEATURE_KEYS},
         })
     return pl.DataFrame(rows) if rows else pl.DataFrame()
