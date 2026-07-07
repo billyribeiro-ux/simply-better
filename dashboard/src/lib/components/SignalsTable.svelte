@@ -71,6 +71,7 @@
 	let page = $state(0);
 
 	const symbols = $derived([...new Set(signals.map((s) => s.symbol))].sort());
+	const setups = $derived([...new Set(signals.map((s) => s.setup))].sort());
 
 	const filtered = $derived(
 		signals.filter(
@@ -136,7 +137,7 @@
 		</div>
 		<div class="group" role="group" aria-label="Filter by setup">
 			<span class="eyebrow">setup</span>
-			{#each ['ALL', 'HOD_FADE', 'LOD_RECLAIM'] as su (su)}
+			{#each ['ALL', ...setups] as su (su)}
 				<button
 					class="chip num"
 					class:active={setupFilter === su}

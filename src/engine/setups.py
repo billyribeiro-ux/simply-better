@@ -19,6 +19,8 @@ log = logging.getLogger("engine.setups")
 
 HOD_FADE = "HOD_FADE"
 LOD_RECLAIM = "LOD_RECLAIM"
+HOD_BREAK = "HOD_BREAK"       # long continuation of a new high, with the trend
+LOD_BREAK = "LOD_BREAK"       # short continuation of a new low, with the trend
 
 
 def _hm(s: str) -> int:
@@ -34,6 +36,8 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
 
     scfg = cfg.setups
     hod_cfg, lod_cfg = scfg["hod_fade"], scfg["lod_reclaim"]
+    hb_cfg = scfg.get("hod_break", {})
+    lb_cfg = scfg.get("lod_break", {})
     cooldown = int(scfg["cooldown_bars"])
     max_side = int(scfg["max_per_side_per_day"])
     min_trig = _hm(cfg.session["min_trigger"])
@@ -73,8 +77,9 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
         hod, lod = h[0], lo[0]
         n_new_highs, n_new_lows = 0, 0
         cum_pv, cum_v = 0.0, 0.0
-        last_trig = {HOD_FADE: -10**9, LOD_RECLAIM: -10**9}
-        count = {HOD_FADE: 0, LOD_RECLAIM: 0}
+        last_trig = {HOD_FADE: -10**9, LOD_RECLAIM: -10**9,
+                     HOD_BREAK: -10**9, LOD_BREAK: -10**9}
+        count = {HOD_FADE: 0, LOD_RECLAIM: 0, HOD_BREAK: 0, LOD_BREAK: 0}
 
         # anchors: prior-day POC from the carried histogram, developing POC
         # built incrementally (bin width fixed at session start from prior ATR)
@@ -185,7 +190,8 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
 
             # ---- HOD FADE (short) ----------------------------------------
             if (
-                new_hod
+                bool(hod_cfg.get("enabled", True))
+                and new_hod
                 and cl[i] < o[i]
                 and (h[i] - day_open) / atr >= float(hod_cfg["ext_min_atr"])
                 and upper_wick / rng >= float(hod_cfg["wick_frac_min"])
@@ -212,7 +218,8 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
 
             # ---- LOD RECLAIM (long) --------------------------------------
             if (
-                new_lod
+                bool(lod_cfg.get("enabled", True))
+                and new_lod
                 and cl[i] > o[i]
                 and (day_open - lo[i]) / atr >= float(lod_cfg["ext_min_atr"])
                 and lower_wick / rng >= float(lod_cfg["wick_frac_min"])
@@ -234,6 +241,62 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
                 })
                 last_trig[LOD_RECLAIM] = i
                 count[LOD_RECLAIM] += 1
+
+            # ---- HOD BREAK (long continuation) ---------------------------
+            # concept 2: strong close at a fresh high while the session
+            # already trends up — the trades the fade concept was losing to
+            if (
+                bool(hb_cfg.get("enabled", False))
+                and new_hod
+                and cl[i] > o[i]
+                and (h[i] - day_open) / atr >= float(hb_cfg["ext_min_atr"])
+                and (cl[i] - lo[i]) / rng >= float(hb_cfg["body_frac_min"])
+                and eff_frozen >= float(hb_cfg["eff_min"])
+                and count[HOD_BREAK] < max_side
+                and i - last_trig[HOD_BREAK] >= cooldown
+            ):
+                rooms = rooms_for(1.0)
+                events.append({
+                    **base,
+                    **rooms,
+                    "max_room_atr": float(max(rooms.values())),
+                    "dt_eff_h1_aligned": float(-(1.0) * eff_frozen),
+                    "setup": HOD_BREAK,
+                    "side": 1.0,
+                    "level": float(hod),
+                    "range_ext_atr": float((h[i] - day_open) / atr),
+                    "wick_ratio": float(upper_wick / rng),
+                    "n_extremes": float(n_new_highs),
+                })
+                last_trig[HOD_BREAK] = i
+                count[HOD_BREAK] += 1
+
+            # ---- LOD BREAK (short continuation) --------------------------
+            if (
+                bool(lb_cfg.get("enabled", False))
+                and new_lod
+                and cl[i] < o[i]
+                and (day_open - lo[i]) / atr >= float(lb_cfg["ext_min_atr"])
+                and (h[i] - cl[i]) / rng >= float(lb_cfg["body_frac_min"])
+                and eff_frozen <= -float(lb_cfg["eff_min"])
+                and count[LOD_BREAK] < max_side
+                and i - last_trig[LOD_BREAK] >= cooldown
+            ):
+                rooms = rooms_for(-1.0)
+                events.append({
+                    **base,
+                    **rooms,
+                    "max_room_atr": float(max(rooms.values())),
+                    "dt_eff_h1_aligned": float(-(-1.0) * eff_frozen),
+                    "setup": LOD_BREAK,
+                    "side": -1.0,
+                    "level": float(lod),
+                    "range_ext_atr": float((day_open - lo[i]) / atr),
+                    "wick_ratio": float(lower_wick / rng),
+                    "n_extremes": float(n_new_lows),
+                })
+                last_trig[LOD_BREAK] = i
+                count[LOD_BREAK] += 1
 
         # finished session becomes the prior-day histogram for the next one
         pd_hist = day_hist

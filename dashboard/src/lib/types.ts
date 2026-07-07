@@ -92,7 +92,7 @@ export interface Signal {
 	id: number;
 	symbol: string;
 	date: string;
-	setup: 'HOD_FADE' | 'LOD_RECLAIM';
+	setup: string;
 	side: 'SHORT' | 'LONG';
 	trigger_ts: string;
 	entry_ts: string;
@@ -145,7 +145,7 @@ export interface LiveFile {
 export interface LiveSignal {
 	id: string;
 	symbol: string;
-	setup: 'HOD_FADE' | 'LOD_RECLAIM';
+	setup: string;
 	side: 'SHORT' | 'LONG';
 	trigger_ts: string;
 	prob: number;

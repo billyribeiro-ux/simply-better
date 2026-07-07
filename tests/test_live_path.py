@@ -39,6 +39,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def _tmp_cfg(tmp_path: Path, universe: list[str]):
     raw = yaml.safe_load((REPO_ROOT / "config.yaml").read_text(encoding="utf-8"))
     raw["universe"] = universe
+    for s in ("hod_fade", "lod_reclaim"):
+        raw["setups"][s]["enabled"] = True   # these envs exercise the fade paths
     p = tmp_path / "config.yaml"
     p.write_text(yaml.safe_dump(raw), encoding="utf-8")
     return load_config(p)

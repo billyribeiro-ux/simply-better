@@ -18,7 +18,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 @pytest.fixture(scope="module")
 def cfg():
-    return load_config(REPO_ROOT / "config.yaml")
+    c = load_config(REPO_ROOT / "config.yaml")
+    # these tests exercise the fade detectors; re-enable them (production
+    # config disables the refuted concept)
+    for s in ("hod_fade", "lod_reclaim"):
+        c.raw["setups"][s]["enabled"] = True
+    return c
 
 
 def _labeled(n_months=8, per_month=40, seed=5) -> pl.DataFrame:

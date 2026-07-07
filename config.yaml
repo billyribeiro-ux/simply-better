@@ -23,16 +23,31 @@ setups:
   max_per_side_per_day: 2
   day_type:
     # decision-layer trend veto: skip triggers whose aligned first-hour
-    # directional efficiency exceeds this (fading a trending session).
+    # directional efficiency exceeds this (fighting a trending session).
     # FROZEN at 0.45 (2026-07 research program) — retuning on the mined
-    # range restarts the multiplicity clock.
+    # range restarts the multiplicity clock. For continuation setups the
+    # same rule automatically vetoes counter-trend breaks.
     eff_gate_max: 0.45
   hod_fade:
+    enabled: false        # concept refuted 3x incl. 2024 holdout (ledger)
     ext_min_atr: 0.35     # HOD must extend >= this * daily ATR above open
     wick_frac_min: 0.35   # upper wick as fraction of bar range (rejection)
   lod_reclaim:
+    enabled: false        # concept refuted 3x incl. 2024 holdout (ledger)
     ext_min_atr: 0.35
     wick_frac_min: 0.35
+  # concept 2 — trend continuation (pre-registered 2026-07-07, ledger).
+  # Parameters fixed a priori by mirroring; NEVER tuned on this range.
+  hod_break:
+    enabled: true
+    ext_min_atr: 0.35     # extension above open, mirrored from the fade spec
+    body_frac_min: 0.5    # close in the break-side half of the trigger bar
+    eff_min: 0.30         # session efficiency already aligned with the break
+  lod_break:
+    enabled: true
+    ext_min_atr: 0.35
+    body_frac_min: 0.5
+    eff_min: 0.30
 
 entry:
   confirm_bars_1m: 15     # 1-min bars allowed for break confirmation
@@ -56,8 +71,8 @@ model:
   ensemble_seeds: 3       # seed-bagged LightGBM members, probabilities averaged
   # research trials charged into DSR deflation on top of the geometry x
   # threshold search — full breakdown in docs/research-ledger.md
-  # (148 from the 2026-07 program + 20 from the second experiment cycle)
-  external_trials: 168
+  # (148 program + 20 second cycle + 6 concept-2 design DOF)
+  external_trials: 174
   params:
     num_leaves: 31
     learning_rate: 0.05

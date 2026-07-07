@@ -85,6 +85,29 @@ record are sound and ready for the next concept; no further tuning of
 THIS concept on ANY historical range is permitted. The forward paper
 record may continue for monitoring, with expectations set accordingly.
 
+## PRE-REGISTERED: concept 2 — trend continuation (declared 2026-07-07, before any run)
+
+Derived from concept 1's failure evidence, not from new mining: the trend
+veto's drop bucket (fading trending sessions) ran −0.19R; never-confirming
+fade events averaged −0.46R (the extreme kept extending); loss clusters sit
+in momentum conditions; reversion runway was never traversed. The mirror
+concept: HOD_BREAK (long a strong new-high bar when the session already
+trends up), LOD_BREAK (short mirror).
+
+Parameters fixed A PRIORI, zero tuning: ext_min_atr 0.35 (mirrored from the
+fade spec), body_frac_min 0.5 (close in the break-side half of the bar),
+eff_min 0.30 (session efficiency aligned with the break). Fades disabled.
+Design degrees of freedom charged: +6 external trials (168 → 174).
+
+Pre-registered read of the single 30-month walk-forward run:
+- (a) expectancy_r > +0.05 AND net_pnl_usd > 0 after honest costs →
+  promising; concept goes live on the forward paper record (EXPLORATORY —
+  2024-25-26 is development data; only forward months confirm).
+- (b) 0 < expectancy_r ≤ +0.05 or net ≤ 0 → weak; keep on research bench.
+- (c) expectancy_r ≤ 0 → trend continuation as specified is also dead;
+  the universe/timeframe itself goes under review.
+No parameter may be revisited on this range regardless of outcome.
+
 ## Known record caveats
 
 - **82/465 event drift**: 82 trades of run f4e6c58b4603 do not rematch a
