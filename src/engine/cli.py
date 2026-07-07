@@ -1,12 +1,15 @@
-"""CLI: mie ingest | mie run | mie all"""
+"""CLI: mie ingest | mie run | mie all | mie train | mie live"""
 from __future__ import annotations
 
 import logging
-from datetime import date
+import time as time_mod
+from datetime import date, datetime, time
 
 import typer
 
 from . import export as export_mod
+from . import live as live_mod
+from . import production
 from .config import load_config
 from .data import ingest as ingest_data
 from .learn import run_pipeline
@@ -64,6 +67,76 @@ def run(
     )
     if not no_export:
         export_mod.write(cfg, artifacts)
+
+
+@app.command()
+def train(
+    date_from: str = typer.Option(..., "--from", help="YYYY-MM-DD"),
+    date_to: str = typer.Option(..., "--to", help="YYYY-MM-DD"),
+    config: str = typer.Option("config.yaml", "--config"),
+) -> None:
+    """Train the production live-signal model on cached data and save it."""
+    cfg = load_config(config)
+    a, b = _dates(date_from, date_to)
+    bundle = production.train_production(cfg, a, b)
+    path = production.save_bundle(cfg, bundle)
+    typer.echo(
+        f"\nproduction model trained {a} -> {b}\n"
+        f"events={bundle.n_events}  labeled={bundle.n_labeled}  "
+        f"threshold={bundle.fm.threshold:.3f}  rules={len(bundle.rules)}\n"
+        f"geometry cells: "
+        + ", ".join(f"{r['setup']} r{r['regime']}={r['anchor']}"
+                    for r in bundle.geometry.rows())
+        + f"\nsaved -> {path}"
+    )
+
+
+@app.command()
+def live(
+    date_str: str = typer.Option(None, "--date",
+                                 help="replay a past session (YYYY-MM-DD); "
+                                      "default = today in US/Eastern"),
+    poll: int = typer.Option(0, "--poll",
+                             help="re-scan every N seconds until 15:55 ET"),
+    no_refresh: bool = typer.Option(False, "--no-refresh",
+                                    help="scan the cache without hitting FMP"),
+    config: str = typer.Option("config.yaml", "--config"),
+) -> None:
+    """Generate live signals for one session with the production model."""
+    cfg = load_config(config)
+    bundle = production.load_bundle(cfg)
+    replay = date_str is not None
+    session = date.fromisoformat(date_str) if replay else live_mod.now_et_naive().date()
+
+    while True:
+        now_et = (datetime.combine(session, time(16, 0)) if replay
+                  else live_mod.now_et_naive())
+        if not no_refresh:
+            live_mod.refresh_data(cfg, session)
+        report = live_mod.scan_live(cfg, bundle, session, now_et)
+        live_mod.write_live_json(cfg, report)
+        live_mod.persist_live(cfg, report)
+
+        typer.echo(f"\n{session} as of {now_et:%H:%M} ET  "
+                   f"(model through {report['trained_through']}, "
+                   f"base thr {report['threshold_base']})")
+        if report.get("note"):
+            typer.echo(report["note"])
+        for s in report["signals"]:
+            typer.echo(
+                f"  {s['symbol']:<5} {s['setup']:<11} {s['side']:<5} "
+                f"trig {s['trigger_ts'][11:16]}  p={s['prob']:.3f}/{s['threshold']:.3f} "
+                f"{'TAKE ' if s['taken'] else 'skip '}"
+                f"entry@{s['entry_trigger_px']:<8} stop {s['stop_px']:<8} "
+                f"tgt {s['target_px']:<8} x{s['shares']:<5} [{s['status']}]"
+            )
+
+        if replay or poll <= 0:
+            break
+        if live_mod.now_et_naive().time() >= time(15, 55):
+            typer.echo("session flat-by reached — stopping")
+            break
+        time_mod.sleep(poll)
 
 
 @app.command("all")

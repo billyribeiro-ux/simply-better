@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import logging
 import uuid
+from dataclasses import dataclass, field
 from datetime import date
 
 import numpy as np
@@ -34,7 +35,29 @@ from .features import daily_context
 log = logging.getLogger("engine.learn")
 
 
+@dataclass
+class ResearchState:
+    """Everything the fold loop produced — consumed by run_pipeline's
+    artifact builder and by production.train_production (which needs the
+    honestly-accumulated attribution rules and the event/scan universe)."""
+    events: list[dict]
+    scans: dict
+    all_ids: list[int]
+    attribution: attr.Attribution
+    fold_results: list = field(default_factory=list)
+    all_decided: pl.DataFrame | None = None
+    taken: pl.DataFrame | None = None
+    geo_final: geometry.Geometry | None = None
+    n_trials: int = 0
+
+
 def run_pipeline(cfg: Config, d_from: date, d_to: date) -> dict:
+    """Full research loop + artifact build (behavior unchanged)."""
+    state = run_research(cfg, d_from, d_to)
+    return _build_artifacts(cfg, state, d_from, d_to)
+
+
+def run_research(cfg: Config, d_from: date, d_to: date) -> ResearchState:
     store = Store(cfg)
     detect_tf = cfg.raw["data"]["detect_tf"]
     refine_tf = cfg.raw["data"]["refine_tf"]
@@ -139,6 +162,20 @@ def run_pipeline(cfg: Config, d_from: date, d_to: date) -> dict:
     taken = all_decided.filter(pl.col("taken"))
     log.info("decided=%d taken=%d rules=%d",
              all_decided.height, taken.height, len(attribution.rules))
+
+    return ResearchState(
+        events=events, scans=scans, all_ids=all_ids, attribution=attribution,
+        fold_results=fold_results, all_decided=all_decided, taken=taken,
+        geo_final=geo_final, n_trials=n_trials,
+    )
+
+
+def _build_artifacts(cfg: Config, state: ResearchState,
+                     d_from: date, d_to: date) -> dict:
+    store = Store(cfg)
+    all_decided, taken = state.all_decided, state.taken
+    fold_results, attribution = state.fold_results, state.attribution
+    geo_final, n_trials = state.geo_final, state.n_trials
 
     # ---- 5. portfolio simulation ------------------------------------------
     trades, eq_dates, eq_curve = backtest.run(cfg, taken)

@@ -73,3 +73,9 @@ execution:
 
 export:
   out_dir: dashboard/static/data
+
+live:
+  model_path: data/model/production.pkl
+  out_file: dashboard/static/data/live.json
+  lookback_sessions: 5    # 5-min history fed to the detector (anchors/context)
+  poll_seconds: 60

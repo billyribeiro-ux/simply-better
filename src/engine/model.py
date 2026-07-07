@@ -30,6 +30,59 @@ warnings.filterwarnings(
 
 
 @dataclass
+class FittedModel:
+    """One trained decision stack: classifier + calibrator + threshold.
+
+    This is the SINGLE fitting path shared by the walk-forward research loop
+    and the production live trainer — the live path cannot drift from what
+    was validated because they are the same code.
+    """
+    clf: LGBMClassifier
+    calibrator: IsotonicRegression | None
+    threshold: float
+    auc_val: float | None
+    features: list[str]
+
+
+def fit_scored_model(cfg: Config, train: pl.DataFrame) -> FittedModel:
+    """Fit on ALL of `train`; calibrate + pick threshold on its chronological
+    tail 20% (the only slice those two components ever see)."""
+    mcfg = cfg.model
+    X_tr = train.select(FEATURES).to_numpy()
+    y_tr = train["outcome"].to_numpy()
+    clf = LGBMClassifier(**mcfg["params"], verbose=-1)
+    clf.fit(X_tr, y_tr)
+
+    cut = int(train.height * 0.8)
+    val = train.sort("entry_ts").tail(train.height - cut)
+    val_raw = (clf.predict_proba(val.select(FEATURES).to_numpy())[:, 1]
+               if val.height else np.array([]))
+    y_val = val["outcome"].to_numpy() if val.height else np.array([])
+
+    calibrator = None
+    if (bool(mcfg.get("calibrate", False)) and val.height >= 10
+            and len(np.unique(y_val)) > 1):
+        calibrator = IsotonicRegression(out_of_bounds="clip")
+        calibrator.fit(val_raw, y_val)
+    val_probs = (np.asarray(calibrator.predict(val_raw), dtype=float)
+                 if calibrator is not None else val_raw)
+
+    threshold = _pick_threshold(cfg, val_probs, val)
+    # rank on RAW tail probs: isotonic was fit on this slice, so its own
+    # fitted values would report a self-fit-inflated AUC
+    return FittedModel(clf, calibrator, float(threshold),
+                       _safe_auc(y_val, val_raw), list(FEATURES))
+
+
+def score(fm: FittedModel, X: np.ndarray) -> np.ndarray:
+    """Raw model probabilities passed through the fitted calibrator."""
+    raw = fm.clf.predict_proba(X)[:, 1]
+    if fm.calibrator is not None:
+        return np.asarray(fm.calibrator.predict(raw), dtype=float)
+    return np.asarray(raw, dtype=float)
+
+
+@dataclass
 class FoldResult:
     fold: str                 # "YYYY-MM"
     test: pl.DataFrame        # labeled trades + prob + threshold
@@ -73,47 +126,26 @@ def walk_forward(cfg: Config, labeled: pl.DataFrame) -> list[FoldResult]:
         if train.height < 100 or test.height == 0:
             continue
 
-        X_tr = train.select(FEATURES).to_numpy()
         y_tr = train["outcome"].to_numpy()
         if len(np.unique(y_tr)) < 2:
             continue
 
-        clf = LGBMClassifier(**mcfg["params"], verbose=-1)
-        clf.fit(X_tr, y_tr)
+        # shared fitting path: model on all of train, calibrator + threshold
+        # on the chronological tail 20% (the only slice they ever see)
+        fm = fit_scored_model(cfg, train)
+        threshold = fm.threshold
 
-        # chronological tail 20% of train = internal validation slice, shared
-        # by the calibrator and the threshold picker (both see ONLY this slice)
-        cut = int(train.height * 0.8)
-        val = train.sort("entry_ts").tail(train.height - cut)
-        val_raw = (clf.predict_proba(val.select(FEATURES).to_numpy())[:, 1]
-                   if val.height else np.array([]))
-        y_val = val["outcome"].to_numpy() if val.height else np.array([])
-
-        calibrator = None
-        if (bool(mcfg.get("calibrate", False)) and val.height >= 10
-                and len(np.unique(y_val)) > 1):
-            calibrator = IsotonicRegression(out_of_bounds="clip")
-            calibrator.fit(val_raw, y_val)
-        val_probs = (np.asarray(calibrator.predict(val_raw), dtype=float)
-                     if calibrator is not None else val_raw)
-
-        threshold = _pick_threshold(cfg, val_probs, val)
-
-        raw = clf.predict_proba(test.select(FEATURES).to_numpy())[:, 1]
-        probs = (np.asarray(calibrator.predict(raw), dtype=float)
-                 if calibrator is not None else raw)
+        probs = score(fm, test.select(FEATURES).to_numpy())
         test = test.with_columns(
             pl.Series("prob", probs.astype(float)),
             pl.lit(float(threshold)).alias("threshold"),
             pl.lit(m).alias("fold"),
         )
         auc_test = _safe_auc(test["outcome"].to_numpy(), probs)
-        # rank on RAW tail probs: isotonic was fit on this slice, so its own
-        # fitted values would report a self-fit-inflated AUC
-        auc_val = _safe_auc(y_val, val_raw)
+        auc_val = fm.auc_val
         prob_hist = np.histogram(probs, bins=20, range=(0.0, 1.0))[0].astype(int).tolist()
 
-        gain = clf.booster_.feature_importance(importance_type="gain")
+        gain = fm.clf.booster_.feature_importance(importance_type="gain")
         imp = {f: float(g) for f, g in zip(FEATURES, gain)}
         results.append(FoldResult(m, test, float(threshold), train.height, imp,
                                   auc_test=auc_test, auc_val=auc_val,
