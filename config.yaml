@@ -94,5 +94,6 @@ export:
 live:
   model_path: data/model/production.pkl
   out_file: dashboard/static/data/live.json
+  paper_file: dashboard/static/data/paper.json
   lookback_sessions: 5    # 5-min history fed to the detector (anchors/context)
   poll_seconds: 60

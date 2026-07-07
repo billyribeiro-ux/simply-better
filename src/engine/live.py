@@ -60,20 +60,17 @@ def refresh_data(cfg: Config, session_date: date) -> None:
         client.close()
 
 
-def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
-              now_et: datetime) -> dict:
-    """Detect, score, and size today's triggers with the production bundle."""
-    store = Store(cfg)
-    tick = float(cfg.entry["tick"])
-    confirm_n = int(cfg.entry["confirm_bars_1m"])
-    ex = cfg.execution
-    equity = float(ex["starting_equity"])
-    risk_usd = equity * float(ex["risk_per_trade_pct"]) / 100.0
+def gather_session(cfg: Config, universe: list[str], session_date: date,
+                   now_et: datetime) -> tuple[list[dict], dict[str, pl.DataFrame]]:
+    """Detect a session's trigger events and load its completed 1-min bars.
 
+    Shared by scan_live and the paper resolver so decisions and outcome
+    resolution always see byte-identical data."""
+    store = Store(cfg)
     lookback_start = session_date - timedelta(days=_LOOKBACK_CAL_DAYS)
     events: list[dict] = []
     bars1: dict[str, pl.DataFrame] = {}
-    for sym in bundle.universe:
+    for sym in universe:
         ctx = daily_context(store.load_daily(sym))
         b5 = store.load_bars("5min", sym, lookback_start, session_date)
         # live hygiene: only completed bars may be seen
@@ -81,9 +78,21 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
         events.extend(setups.detect(cfg, sym, b5, ctx))
         b1 = store.load_bars("1min", sym, session_date, session_date)
         bars1[sym] = b1.filter(pl.col("ts") + pl.duration(minutes=1) <= now_et)
-
     today = sorted((e for e in events if e["session_date"] == session_date),
                    key=lambda e: e["trigger_ts"])
+    return today, bars1
+
+
+def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
+              now_et: datetime) -> dict:
+    """Detect, score, and size today's triggers with the production bundle."""
+    tick = float(cfg.entry["tick"])
+    confirm_n = int(cfg.entry["confirm_bars_1m"])
+    ex = cfg.execution
+    equity = float(ex["starting_equity"])
+    risk_usd = equity * float(ex["risk_per_trade_pct"]) / 100.0
+
+    today, bars1 = gather_session(cfg, bundle.universe, session_date, now_et)
 
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),

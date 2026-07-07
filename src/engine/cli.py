@@ -9,6 +9,7 @@ import typer
 
 from . import export as export_mod
 from . import live as live_mod
+from . import paper as paper_mod
 from . import production
 from .config import load_config
 from .data import ingest as ingest_data
@@ -134,9 +135,49 @@ def live(
         if replay or poll <= 0:
             break
         if live_mod.now_et_naive().time() >= time(15, 55):
-            typer.echo("session flat-by reached — stopping")
+            typer.echo("session flat-by reached — resolving paper trades")
+            _resolve_paper(cfg, bundle, session,
+                           datetime.combine(session, time(16, 0)))
             break
         time_mod.sleep(poll)
+
+
+def _resolve_paper(cfg, bundle, session: date, now_et: datetime) -> None:
+    rows = paper_mod.resolve_day(cfg, bundle, session, now_et)
+    paper_mod.persist_day(cfg, session, rows)
+    path = paper_mod.export_record(cfg)
+    for r in rows:
+        typer.echo(
+            f"  PAPER {r['symbol']:<5} {r['side']:<5} "
+            f"{r['entry_ts'][11:16]}@{r['entry_px']:<8.2f} -> "
+            f"{r['exit_ts'][11:16]}@{r['exit_px']:<8.2f} [{r['exit_reason']:<6}] "
+            f"{r['pnl_r']:+.2f}R  ${r['pnl_usd']:+,.2f}"
+        )
+    if not rows:
+        typer.echo("  no taken+confirmed signals to resolve")
+    typer.echo(f"  paper record -> {path}")
+
+
+@app.command()
+def paper(
+    date_str: str = typer.Option(None, "--date",
+                                 help="session to resolve (YYYY-MM-DD); "
+                                      "default = today in US/Eastern"),
+    no_refresh: bool = typer.Option(False, "--no-refresh",
+                                    help="resolve from cache without hitting FMP"),
+    config: str = typer.Option("config.yaml", "--config"),
+) -> None:
+    """Resolve a session's taken signals into the forward paper record."""
+    cfg = load_config(config)
+    bundle = production.load_bundle(cfg)
+    session = (date.fromisoformat(date_str) if date_str
+               else live_mod.now_et_naive().date())
+    now_et = (live_mod.now_et_naive() if session == live_mod.now_et_naive().date()
+              else datetime.combine(session, time(16, 0)))
+    if not no_refresh:
+        live_mod.refresh_data(cfg, session)
+    typer.echo(f"resolving paper trades for {session} as of {now_et:%H:%M} ET")
+    _resolve_paper(cfg, bundle, session, now_et)
 
 
 @app.command("all")

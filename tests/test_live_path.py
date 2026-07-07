@@ -327,3 +327,62 @@ class TestLiveStatuses:
                                 now_et=datetime(2025, 3, 10, 10, 7))
         assert report["signals"] == []
         assert "no setup triggers" in report.get("note", "")
+
+
+# ---------------------------------------------------------------------------
+# paper trading: resolution, open-trade marking, idempotent record
+# ---------------------------------------------------------------------------
+class TestPaperResolution:
+    @staticmethod
+    def _force_take(monkeypatch):
+        from engine import model as model_mod
+        monkeypatch.setattr(model_mod, "score",
+                            lambda fm, X: np.full(len(X), 0.99))
+
+    def test_eod_resolution_and_usd_math(self, crafted_env, monkeypatch):
+        from engine import paper
+        cfg, bundle, day = crafted_env
+        self._force_take(monkeypatch)
+        rows = paper.resolve_day(cfg, bundle, day,
+                                 now_et=datetime.combine(day, time(16, 0)))
+        # LOD_RECLAIM confirmed and taken; HOD_FADE is trend-vetoed + expired
+        assert len(rows) == 1
+        r = rows[0]
+        assert r["setup"] == "LOD_RECLAIM" and r["resolved"] is True
+        assert r["exit_reason"] == "eod"          # neither barrier ever crossed
+        assert r["exit_px"] == pytest.approx(101.80, abs=0.01)
+        assert r["pnl_r"] == pytest.approx(0.2, abs=0.01)   # +0.2ATR / 0.5ATR stop
+        # USD: long 500 shares, slippage against both sides + commission
+        slip = 2.0 / 1e4
+        expect = (101.80 * (1 - slip) - 101.60 * (1 + slip)) * 500 - 500 * 2 * 0.0035
+        assert r["pnl_usd"] == pytest.approx(expect, abs=0.05)
+
+    def test_open_trade_marked_unresolved(self, crafted_env, monkeypatch):
+        from engine import paper
+        cfg, bundle, day = crafted_env
+        self._force_take(monkeypatch)
+        rows = paper.resolve_day(cfg, bundle, day,
+                                 now_et=datetime(2025, 3, 10, 10, 40))
+        assert len(rows) == 1
+        assert rows[0]["exit_reason"] == "open"
+        assert rows[0]["resolved"] is False
+
+    def test_record_is_idempotent_per_day(self, crafted_env, monkeypatch):
+        import duckdb
+        from engine import paper
+        cfg, bundle, day = crafted_env
+        self._force_take(monkeypatch)
+        rows = paper.resolve_day(cfg, bundle, day,
+                                 now_et=datetime.combine(day, time(16, 0)))
+        paper.persist_day(cfg, day, rows)
+        paper.persist_day(cfg, day, rows)      # re-run replaces, not duplicates
+        con = duckdb.connect(str(cfg.db_path), read_only=True)
+        n = con.execute("SELECT count(*) FROM paper_trades").fetchone()[0]
+        con.close()
+        assert n == 1
+        out = paper.export_record(cfg)
+        import json
+        rec = json.loads(out.read_text())
+        assert rec["kpis"]["trades"] == 1
+        assert rec["kpis"]["net_pnl_usd"] == pytest.approx(rows[0]["pnl_usd"], abs=0.01)
+        assert len(rec["equity"]["curve"]) == len(rec["equity"]["dates"]) + 1

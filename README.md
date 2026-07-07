@@ -127,7 +127,27 @@ Suggested cron (ET session, weekdays):
 
 ```cron
 35 9 * * 1-5  cd /path/to/repo && .venv/bin/mie live --poll 60
+5 16 * * 1-5  cd /path/to/repo && .venv/bin/mie paper
 ```
+
+## Paper trading — the forward record
+
+`mie paper` resolves a session's TAKEN + CONFIRMED live signals to their
+exits with exactly the backtest's rules (first stop/target crossing on
+1-minute bars, ties against the trade, 15:55 flat, slippage + commission
+charged both sides) and appends them to an idempotent per-day record: the
+DuckDB `paper_trades` table and the dashboard's **Paper track record**
+panel, which shows every trade's entry date/time/price, stop, target,
+exit, R and dollar P&L, plus the cumulative win rate, net P&L, and
+expectancy. `mie live --poll` auto-resolves at the close; running
+`mie paper` again for the same day replaces that day's rows, so an
+intraday run (open trades marked `open` with an unrealized mark) is
+safely superseded by the after-close run.
+
+This record is the strategy's forward confirmation: only trades signaled
+after the model's trained-through date, on a frozen spec, can prove the
+edge the walk-forward's DSR keeps refusing to certify. Keep the spec
+frozen while it accumulates — retuning resets the clock.
 
 ```bash
 # verification

@@ -168,6 +168,47 @@ export interface LiveSignal {
 	max_room_atr: number;
 }
 
+// /data/paper.json — the forward paper-trading record; absent until the
+// first `mie paper` resolution
+export interface PaperFile {
+	generated_at: string;
+	equity_start: number;
+	kpis: {
+		trades: number;
+		open: number;
+		win_rate: number | null;
+		net_pnl_usd: number;
+		expectancy_r: number | null;
+	};
+	equity: Equity;
+	trades: PaperTrade[];
+}
+
+export interface PaperTrade {
+	session_date: string;
+	signal_id: string;
+	symbol: string;
+	setup: string;
+	side: 'SHORT' | 'LONG';
+	trigger_ts: string;
+	entry_ts: string;
+	entry_px: number;
+	shares: number;
+	stop_px: number;
+	target_px: number;
+	exit_ts: string;
+	exit_px: number;
+	exit_reason: 'target' | 'stop' | 'eod' | 'open';
+	resolved: boolean;
+	outcome: 'WIN' | 'LOSS';
+	pnl_r: number;
+	pnl_usd: number;
+	prob: number;
+	threshold: number;
+	trained_through: string;
+	resolved_at: string;
+}
+
 // /data/attribution.json
 export interface Attribution {
 	rules: AdjustmentRule[];

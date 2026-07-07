@@ -4,6 +4,7 @@
 		Equity,
 		GeometryFile,
 		LiveFile,
+		PaperFile,
 		SignalsFile,
 		Summary
 	} from '$lib/types';
@@ -15,6 +16,7 @@
 	import KpiStrip from '$lib/components/KpiStrip.svelte';
 	import LiveSignalsPanel from '$lib/components/LiveSignalsPanel.svelte';
 	import Masthead from '$lib/components/Masthead.svelte';
+	import PaperTrackPanel from '$lib/components/PaperTrackPanel.svelte';
 	import SignalsTable from '$lib/components/SignalsTable.svelte';
 	import TickerRail from '$lib/components/TickerRail.svelte';
 
@@ -33,6 +35,7 @@
 
 	let view = $state<View>({ status: 'loading' });
 	let liveFile = $state<LiveFile | null>(null);
+	let paperFile = $state<PaperFile | null>(null);
 
 	async function fetchJson<T>(path: string): Promise<T> {
 		const res = await fetch(path);
@@ -59,12 +62,18 @@
 					view = { status: 'error', message: err instanceof Error ? err.message : String(err) };
 				}
 			}
-			// live feed is optional — absent until the first `mie live` run
+			// live feed and paper record are optional — absent until first runs
 			try {
 				const lf = await fetchJson<LiveFile>('/data/live.json');
 				if (!cancelled) liveFile = lf;
 			} catch {
 				if (!cancelled) liveFile = null;
+			}
+			try {
+				const pf = await fetchJson<PaperFile>('/data/paper.json');
+				if (!cancelled) paperFile = pf;
+			} catch {
+				if (!cancelled) paperFile = null;
 			}
 		})();
 		return () => {
@@ -99,6 +108,10 @@
 
 		{#if liveFile}
 			<LiveSignalsPanel live={liveFile} />
+		{/if}
+
+		{#if paperFile}
+			<PaperTrackPanel paper={paperFile} />
 		{/if}
 
 		<div class="shell">

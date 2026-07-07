@@ -26,3 +26,4 @@ dashboard/static/data/*.json
 !dashboard/static/data/geometry.json
 !dashboard/static/data/attribution.json
 !dashboard/static/data/live.json
+!dashboard/static/data/paper.json
