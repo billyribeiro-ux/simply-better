@@ -31,52 +31,114 @@ warnings.filterwarnings(
 
 @dataclass
 class FittedModel:
-    """One trained decision stack: classifier + calibrator + threshold.
+    """One trained decision stack: seed-bagged classifiers + calibrator +
+    threshold.
 
     This is the SINGLE fitting path shared by the walk-forward research loop
     and the production live trainer — the live path cannot drift from what
     was validated because they are the same code.
     """
-    clf: LGBMClassifier
+    clfs: list[LGBMClassifier]
     calibrator: IsotonicRegression | None
     threshold: float
     auc_val: float | None
     features: list[str]
 
+    @property
+    def clf(self) -> LGBMClassifier:
+        return self.clfs[0]
+
+
+def _fit_clfs(cfg: Config, X: np.ndarray, y: np.ndarray) -> list[LGBMClassifier]:
+    """Seed-bagged LightGBM ensemble (variance reduction, same data)."""
+    n_seeds = max(1, int(cfg.model.get("ensemble_seeds", 1)))
+    clfs = []
+    for s in range(n_seeds):
+        clf = LGBMClassifier(**cfg.model["params"], verbose=-1, random_state=7 + s)
+        clf.fit(X, y)
+        clfs.append(clf)
+    return clfs
+
+
+def _predict(clfs: list[LGBMClassifier], X: np.ndarray) -> np.ndarray:
+    return np.mean([c.predict_proba(X)[:, 1] for c in clfs], axis=0)
+
+
+def _oof_probs(cfg: Config, train_sorted: pl.DataFrame
+               ) -> tuple[np.ndarray, np.ndarray]:
+    """Out-of-fold probabilities over the training window.
+
+    Expanding chronological blocks: block k's probabilities come from an
+    ensemble fitted ONLY on rows whose session_date precedes the block start
+    by more than the embargo (same purge rule as the walk-forward). Block 0
+    has no prior data and gets NaN. Returns (probs, valid_mask).
+
+    These are the honest inputs for calibration and threshold selection —
+    in-sample probabilities from a 400-tree booster are memorized (~AUC 1.0)
+    and produce degenerate step calibrators and pinned thresholds.
+    """
+    mcfg = cfg.model
+    K = max(2, int(mcfg.get("oof_folds", 4)))
+    n = train_sorted.height
+    probs = np.full(n, np.nan)
+    ords = np.array([d.toordinal() for d in train_sorted["session_date"].to_list()])
+    X_all = train_sorted.select(FEATURES).to_numpy()
+    y_all = train_sorted["outcome"].to_numpy()
+    embargo_days = int(mcfg["walk_forward"]["embargo_days"])
+    edges = [int(round(i * n / K)) for i in range(K + 1)]
+
+    for k in range(1, K):
+        lo, hi = edges[k], edges[k + 1]
+        if hi <= lo:
+            continue
+        cutoff = ords[lo] - embargo_days
+        n_fit = int(np.searchsorted(ords, cutoff, side="left"))
+        if n_fit < 50 or len(np.unique(y_all[:n_fit])) < 2:
+            continue
+        clfs = _fit_clfs(cfg, X_all[:n_fit], y_all[:n_fit])
+        probs[lo:hi] = _predict(clfs, X_all[lo:hi])
+    return probs, ~np.isnan(probs)
+
 
 def fit_scored_model(cfg: Config, train: pl.DataFrame) -> FittedModel:
-    """Fit on ALL of `train`; calibrate + pick threshold on its chronological
-    tail 20% (the only slice those two components ever see)."""
+    """Fit the ensemble on ALL of `train`; calibrate on the training window's
+    out-of-fold probabilities; pick the threshold on the chronological tail
+    20% (invariant 4) using those same honest OOF probabilities."""
     mcfg = cfg.model
+    train = train.sort("entry_ts")
     X_tr = train.select(FEATURES).to_numpy()
     y_tr = train["outcome"].to_numpy()
-    clf = LGBMClassifier(**mcfg["params"], verbose=-1)
-    clf.fit(X_tr, y_tr)
+    clfs = _fit_clfs(cfg, X_tr, y_tr)
 
-    cut = int(train.height * 0.8)
-    val = train.sort("entry_ts").tail(train.height - cut)
-    val_raw = (clf.predict_proba(val.select(FEATURES).to_numpy())[:, 1]
-               if val.height else np.array([]))
-    y_val = val["outcome"].to_numpy() if val.height else np.array([])
+    oof, valid = _oof_probs(cfg, train)
+    n = train.height
+    cut = int(n * 0.8)
 
     calibrator = None
-    if (bool(mcfg.get("calibrate", False)) and val.height >= 10
-            and len(np.unique(y_val)) > 1):
-        calibrator = IsotonicRegression(out_of_bounds="clip")
-        calibrator.fit(val_raw, y_val)
-    val_probs = (np.asarray(calibrator.predict(val_raw), dtype=float)
-                 if calibrator is not None else val_raw)
+    auc_val: float | None = None
+    if valid.sum() >= 30 and len(np.unique(y_tr[valid])) > 1:
+        auc_val = _safe_auc(y_tr[valid], oof[valid])
+        if bool(mcfg.get("calibrate", False)):
+            calibrator = IsotonicRegression(out_of_bounds="clip")
+            calibrator.fit(oof[valid], y_tr[valid])
 
-    threshold = _pick_threshold(cfg, val_probs, val)
-    # rank on RAW tail probs: isotonic was fit on this slice, so its own
-    # fitted values would report a self-fit-inflated AUC
-    return FittedModel(clf, calibrator, float(threshold),
-                       _safe_auc(y_val, val_raw), list(FEATURES))
+    # threshold: tail-20% rows that have OOF coverage, calibrated view
+    tail_valid = valid.copy()
+    tail_valid[:cut] = False
+    if tail_valid.sum() >= 10:
+        thr_probs = oof[tail_valid]
+        if calibrator is not None:
+            thr_probs = np.asarray(calibrator.predict(thr_probs), dtype=float)
+        threshold = _pick_threshold(cfg, thr_probs, train.filter(pl.Series(tail_valid)))
+    else:
+        threshold = float(mcfg["threshold"]["default"])
+
+    return FittedModel(clfs, calibrator, float(threshold), auc_val, list(FEATURES))
 
 
 def score(fm: FittedModel, X: np.ndarray) -> np.ndarray:
-    """Raw model probabilities passed through the fitted calibrator."""
-    raw = fm.clf.predict_proba(X)[:, 1]
+    """Ensemble-mean probabilities passed through the fitted calibrator."""
+    raw = _predict(fm.clfs, X)
     if fm.calibrator is not None:
         return np.asarray(fm.calibrator.predict(raw), dtype=float)
     return np.asarray(raw, dtype=float)
@@ -100,7 +162,8 @@ def _safe_auc(y: np.ndarray, probs: np.ndarray) -> float | None:
     return float(roc_auc_score(y, probs))
 
 
-def walk_forward(cfg: Config, labeled: pl.DataFrame) -> list[FoldResult]:
+def walk_forward(cfg: Config, labeled: pl.DataFrame,
+                 only_fold: str | None = None) -> list[FoldResult]:
     if labeled.height == 0:
         return []
     mcfg = cfg.model
@@ -120,6 +183,8 @@ def walk_forward(cfg: Config, labeled: pl.DataFrame) -> list[FoldResult]:
 
     results: list[FoldResult] = []
     for m in months[min_train_months:]:
+        if only_fold is not None and m != only_fold:
+            continue
         month_start = df.filter(pl.col("fold_month") == m)["session_date"].min()
         train = df.filter(pl.col("session_date") < (month_start - embargo))
         test = df.filter(pl.col("fold_month") == m)

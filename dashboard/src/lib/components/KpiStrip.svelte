@@ -44,7 +44,13 @@
 				class:gain={kpis.expectancy_r > 0}
 				class:loss={kpis.expectancy_r < 0}>{fmtR(kpis.expectancy_r)}</span
 			>
-			<span class="sub num">per trade, in R</span>
+			<span class="sub num">
+				{#if kpis.expectancy_r_ci?.length === 2}
+					95% CI {fmtR(kpis.expectancy_r_ci[0])} … {fmtR(kpis.expectancy_r_ci[1])}
+				{:else}
+					per trade, in R
+				{/if}
+			</span>
 		</li>
 		<li>
 			<span class="eyebrow">Max drawdown</span>
@@ -53,7 +59,12 @@
 		</li>
 	</ul>
 	<div class="stats num">
-		<span>Sharpe {fmtNum(kpis.sharpe, 2)}</span>
+		<span>
+			Sharpe {fmtNum(kpis.sharpe, 2)}{#if kpis.sharpe_ci?.length === 2}&nbsp;[{fmtNum(
+					kpis.sharpe_ci[0],
+					2
+				)} … {fmtNum(kpis.sharpe_ci[1], 2)}]{/if}
+		</span>
 		<span>PSR {fmtNum(kpis.psr, 3)}</span>
 		<span>DSR {fmtNum(kpis.deflated_sharpe, 3)}</span>
 		{#if edgeUnproven}

@@ -90,6 +90,30 @@ def deflated_sharpe(daily_returns: np.ndarray, n_trials: int) -> float:
     return probabilistic_sharpe(daily_returns, sr_benchmark=e_max * math.sqrt(252))
 
 
+def bootstrap_ci(x: np.ndarray, stat, n_boot: int = 2000,
+                 alpha: float = 0.05, block: int = 1,
+                 seed: int = 17) -> tuple[float, float]:
+    """Percentile bootstrap CI. block > 1 uses a circular block bootstrap
+    (for serially-dependent daily returns); block == 1 is iid resampling
+    (per-trade R multiples are treated as independent — documented choice)."""
+    n = len(x)
+    if n < 10:
+        return (float("nan"), float("nan"))
+    rng = np.random.default_rng(seed)
+    stats = np.empty(n_boot)
+    if block <= 1:
+        for b in range(n_boot):
+            stats[b] = stat(x[rng.integers(0, n, n)])
+    else:
+        n_blocks = int(np.ceil(n / block))
+        for b in range(n_boot):
+            starts = rng.integers(0, n, n_blocks)
+            idx = (starts[:, None] + np.arange(block)[None, :]).ravel() % n
+            stats[b] = stat(x[idx[:n]])
+    lo, hi = np.quantile(stats, [alpha / 2, 1 - alpha / 2])
+    return (float(lo), float(hi))
+
+
 def max_drawdown_pct(equity: np.ndarray) -> float:
     if len(equity) == 0:
         return 0.0
@@ -111,6 +135,9 @@ def summarize(trades: pl.DataFrame, equity_dates: list, equity: np.ndarray,
 
     daily_ret = np.diff(equity) / equity[:-1] if len(equity) > 1 else np.array([])
 
+    exp_lo, exp_hi = bootstrap_ci(pnl_r, np.mean)
+    shp_lo, shp_hi = bootstrap_ci(daily_ret, sharpe, block=10)
+
     return {
         "trades": int(trades.height),
         "win_rate": round(float(wins.mean()) * 100.0, 2),
@@ -119,10 +146,12 @@ def summarize(trades: pl.DataFrame, equity_dates: list, equity: np.ndarray,
         "avg_win_r": round(float(pnl_r[wins].mean()), 3) if wins.any() else 0.0,
         "avg_loss_r": round(float(pnl_r[losses].mean()), 3) if losses.any() else 0.0,
         "expectancy_r": round(float(pnl_r.mean()), 4),
+        "expectancy_r_ci": [round(exp_lo, 4), round(exp_hi, 4)],
         "profit_factor": round(gross_win / gross_loss, 3) if gross_loss > 0 else 0.0,
         "net_pnl_usd": round(float(pnl_usd.sum()), 2),
         "max_dd_pct": round(max_drawdown_pct(equity), 2),
         "sharpe": round(sharpe(daily_ret), 3),
+        "sharpe_ci": [round(shp_lo, 3), round(shp_hi, 3)],
         "psr": round(probabilistic_sharpe(daily_ret), 4),
         "deflated_sharpe": round(deflated_sharpe(daily_ret, n_trials), 4),
         "n_trials_deflation": n_trials,

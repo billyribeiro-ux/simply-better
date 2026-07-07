@@ -47,10 +47,12 @@ export interface Kpis {
 	avg_win_r: number;
 	avg_loss_r: number;
 	expectancy_r: number;
+	expectancy_r_ci?: number[]; // 95% bootstrap CI [lo, hi]
 	profit_factor: number;
 	net_pnl_usd: number;
 	max_dd_pct: number;
 	sharpe: number;
+	sharpe_ci?: number[]; // 95% block-bootstrap CI [lo, hi]
 	psr: number;
 	deflated_sharpe: number;
 	n_trials_deflation: number;

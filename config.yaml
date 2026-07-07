@@ -41,7 +41,9 @@ geometry:
   scan_grid: {start: 0.1, stop: 3.0, step: 0.1}   # ATR multiples
 
 model:
-  calibrate: true         # isotonic calibration fitted on the train tail only
+  calibrate: true         # isotonic calibration on out-of-fold train probs
+  oof_folds: 4            # expanding chronological blocks for OOF probabilities
+  ensemble_seeds: 3       # seed-bagged LightGBM members, probabilities averaged
   params:
     num_leaves: 31
     learning_rate: 0.05
@@ -69,6 +71,7 @@ execution:
   commission_per_share: 0.0035
   risk_per_trade_pct: 0.5 # of current equity, constant-risk sizing
   max_concurrent: 4
+  max_daily_loss_pct: 1.5 # kill switch: no new entries after losing this % in a day
   starting_equity: 100000
 
 export:

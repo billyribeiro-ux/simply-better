@@ -133,7 +133,8 @@ def run_research(cfg: Config, d_from: date, d_to: date) -> ResearchState:
             geo.lookup,
         )
         # walk_forward internally splits by month; restrict to this fold's step
-        frs = [fr for fr in model.walk_forward(cfg, labeled) if fr.fold == fold_m]
+        frs = [fr for fr in model.walk_forward(cfg, labeled, only_fold=fold_m)
+               if fr.fold == fold_m]
         if not frs:
             continue
         fr = frs[0]

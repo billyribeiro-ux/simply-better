@@ -106,6 +106,9 @@ def load_bundle(cfg: Config) -> ProductionBundle:
             f"no production model at {p} — run: mie train --from ... --to ...")
     with p.open("rb") as fh:
         bundle: ProductionBundle = pickle.load(fh)
+    if not hasattr(bundle.fm, "clfs"):
+        raise RuntimeError(
+            "production bundle predates the ensemble upgrade — retrain with: mie train")
     if list(bundle.features) != list(FEATURES):
         raise RuntimeError(
             "production bundle feature set does not match the running engine "

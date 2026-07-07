@@ -23,6 +23,7 @@ def run(cfg: Config, taken: pl.DataFrame) -> tuple[pl.DataFrame, list[date], np.
     comm = float(ex["commission_per_share"])
     risk_pct = float(ex["risk_per_trade_pct"]) / 100.0
     max_conc = int(ex["max_concurrent"])
+    max_daily = float(ex.get("max_daily_loss_pct", 0.0)) / 100.0  # 0 = off
     equity = float(ex["starting_equity"])
 
     if taken.height == 0:
@@ -32,12 +33,21 @@ def run(cfg: Config, taken: pl.DataFrame) -> tuple[pl.DataFrame, list[date], np.
     open_exits: list = []          # exit timestamps of live positions
     rows: list[dict] = []
     day_pnl: dict[date, float] = {}
+    day_start_eq: dict[date, float] = {}
 
     for r in df.iter_rows(named=True):
         entry_ts, exit_ts = r["entry_ts"], r["exit_ts"]
         open_exits = [x for x in open_exits if x > entry_ts]
         if len(open_exits) >= max_conc:
             continue                                    # concurrency cap: skip
+
+        d0 = r["session_date"]
+        day_start_eq.setdefault(d0, equity)
+        # kill switch: once the day's realized loss breaches the limit,
+        # no new entries are opened for the rest of that session
+        if (max_daily > 0
+                and day_pnl.get(d0, 0.0) <= -max_daily * day_start_eq[d0]):
+            continue
 
         side = float(r["side"])
         stop_dist = float(r["stop_atr"]) * float(r["atr"])

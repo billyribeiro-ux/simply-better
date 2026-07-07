@@ -30,6 +30,21 @@ taken-trade history; each toxic leaf becomes a threshold-bump rule applied
 only to strictly later folds. KMeans clustering of losing trades produces
 the human-readable loss diagnosis on the dashboard.
 
+## The institutional layer
+
+Selection quality is protected by three mechanisms beyond the walk-forward
+itself. **Out-of-fold calibration:** the isotonic calibrator and the decision
+threshold learn from out-of-fold probabilities (expanding chronological
+blocks inside the training window, purged with the same embargo as the
+walk-forward) — never from the final model's memorized in-sample output.
+**Seed-bagged ensemble:** each decision stack averages several LightGBM
+members fitted with different seeds. **Uncertainty on every headline
+number:** expectancy ships with a 95% trade-bootstrap CI and Sharpe with a
+95% circular-block-bootstrap CI, so a point estimate can never pose as more
+than the data supports. The portfolio layer adds a daily kill switch
+(`execution.max_daily_loss_pct`): once a session's realized loss breaches
+the limit, no new entries open that day.
+
 ## The validation discipline
 
 Everything is walk-forward, embargoed, and out-of-sample. Daily context

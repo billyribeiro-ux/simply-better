@@ -262,7 +262,10 @@ class TestCalibrationHygiene:
                 rows.append(row)
         return pl.DataFrame(rows)
 
-    def test_isotonic_fit_only_on_tail(self, cfg, monkeypatch):
+    def test_isotonic_fit_only_on_train_oof(self, cfg, monkeypatch):
+        """The calibrator may only ever see TRAIN-window out-of-fold
+        probabilities and outcomes — never test-fold labels, and never the
+        final model's in-sample (memorized) probabilities."""
         calls: list[tuple[np.ndarray, np.ndarray]] = []
 
         class SpyIso:
@@ -284,15 +287,19 @@ class TestCalibrationHygiene:
         assert folds, "walk-forward produced no folds"
         assert len(calls) == len(folds)
 
-        # reconstruct each fold's expected tail and check the fit target
         embargo = timedelta(days=int(cfg.model["walk_forward"]["embargo_days"]))
+        K = int(cfg.model["oof_folds"])
         df = labeled.sort("entry_ts").with_columns(
             pl.col("session_date").dt.strftime("%Y-%m").alias("fold_month"))
         for fr, (x_fit, y_fit) in zip(folds, calls):
             month_start = df.filter(pl.col("fold_month") == fr.fold)["session_date"].min()
-            train = df.filter(pl.col("session_date") < (month_start - embargo))
-            tail = train.sort("entry_ts").tail(train.height - int(train.height * 0.8))
-            n_test = fr.test.height
-            assert len(y_fit) == tail.height        # exactly the tail slice
-            assert len(y_fit) != n_test or tail.height == n_test
-            assert np.array_equal(y_fit, tail["outcome"].to_numpy())
+            train = df.filter(
+                pl.col("session_date") < (month_start - embargo)).sort("entry_ts")
+            # OOF coverage = blocks 1..K-1 (block 0 has no prior data)
+            first_covered = int(round(train.height / K))
+            expected = train["outcome"].to_numpy()[first_covered:]
+            assert len(y_fit) == len(expected)      # exactly the OOF rows
+            assert np.array_equal(y_fit, expected)  # train outcomes only
+            assert len(y_fit) < train.height        # never the full train
+            # the final model's in-sample probs would be ~0/1; OOF must not be
+            assert 0.02 < float(np.mean((x_fit > 0.02) & (x_fit < 0.98)))
