@@ -108,6 +108,29 @@ Pre-registered read of the single 30-month walk-forward run:
   the universe/timeframe itself goes under review.
 No parameter may be revisited on this range regardless of outcome.
 
+**VERDICT (run 65603170d228, 25 folds / 24 OOS months): outcome (a).**
+998 filled trades, expectancy **+0.0997R with 95% CI [+0.027, +0.172]** —
+the first zero-excluding positive interval in this program — 17/24 months
+positive, net **+$1,154** after honest slippage and commission.
+Per-setup: LOD_BREAK +0.130R (462 trades) > HOD_BREAK +0.054R (649) —
+downside momentum stronger. Geometry chose ATR mode in all six cells
+(reversion anchors correctly lost the search for continuation trades),
+converging on tiny 0.2-ATR stops with 0.3–0.5 targets.
+
+Honest counterweights, recorded with the win: profit factor 1.005 — the
+tiny-stop geometry produces large share counts, so costs consume nearly
+the entire R edge in dollars; Sharpe 0.13 [CI −1.10, +1.35]; DSR 0.0001
+at 14,849 trials (the deflator still refuses certification, as it should
+after this much mining). AUC 0.514: the meta-model adds little on
+breakouts — the raw setup carries the edge.
+
+Per pre-registration: concept 2 goes live on the forward paper record,
+EXPLORATORY. Standing questions for FORWARD DATA ONLY (no retuning):
+(1) does the R edge persist out of development data; (2) the cost-drag
+structure (stop width vs share count) may only be revisited as a
+pre-registered experiment after ≥3 months of forward record. The paper
+record now spans two concepts; trades are distinguishable by setup.
+
 ## Known record caveats
 
 - **82/465 event drift**: 82 trades of run f4e6c58b4603 do not rematch a
