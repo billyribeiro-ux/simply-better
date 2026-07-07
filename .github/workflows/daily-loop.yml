@@ -50,7 +50,7 @@ jobs:
             echo "::error::FMP_API_KEY secret is not set — add it under Settings -> Secrets -> Actions"
             exit 1
           fi
-          mie daily
+          mie daily --train-from 2024-01-02
 
       - name: publish artifacts
         run: |

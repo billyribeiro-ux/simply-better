@@ -70,6 +70,21 @@ Caveat recorded: 2024 is untouched by the *tuning*, but the setup concept
 was designed by people who knew markets generally — this is weaker than
 true forward data, stronger than anything else available today.
 
+**VERDICT (run 8fe8485638ff, 25 folds over 30 months): outcome (b).**
+2024-H2 holdout: 134 trades, expectancy **−0.039R**, win rate 45.5%,
+net −$7,801, 4/6 months positive but negative overall. The mined range
+itself softened to +0.004R with 2024 in the training windows. Full
+30-month record: expectancy 0.0003R [CI −0.085, +0.084], net −$21.8k
+after honest costs, max DD −22.2%, DSR 0.0 at 14,843 trials.
+
+**Standing conclusion: the HOD-fade / LOD-reclaim concept, as specified,
+has no edge on this universe — replicated three times independently,
+now including virgin data.** Per the pre-registration, the setup concept
+is under review. The platform, validation harness, live path, and paper
+record are sound and ready for the next concept; no further tuning of
+THIS concept on ANY historical range is permitted. The forward paper
+record may continue for monitoring, with expectations set accordingly.
+
 ## Known record caveats
 
 - **82/465 event drift**: 82 trades of run f4e6c58b4603 do not rematch a
