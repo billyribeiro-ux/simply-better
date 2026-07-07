@@ -149,6 +149,21 @@ after the model's trained-through date, on a frozen spec, can prove the
 edge the walk-forward's DSR keeps refusing to certify. Keep the spec
 frozen while it accumulates — retuning resets the clock.
 
+## Hands-free adaptation loop
+
+`mie daily` closes the whole learning loop in one command, in the only
+safe order: refresh data (cold caches bootstrap the full history), resolve
+today's paper trades **with the bundle that generated them**, then retrain
+the production model through today for tomorrow's session. The included
+GitHub Actions workflow (`.github/workflows/daily-loop.yml`) runs it every
+trading day at 17:15 ET and commits the updated live + paper artifacts
+back to the branch — set the `FMP_API_KEY` repository secret and the
+engine re-learns its geometry, model, calibration, threshold, and
+attribution rules nightly with zero human touch. The *structure* (setups,
+features, gate, grids) stays frozen: structural changes only enter through
+the research harness with pre-registered criteria and deflation charged —
+see `docs/research-ledger.md`.
+
 ```bash
 # verification
 python3 -m py_compile src/engine/*.py   # compiles clean

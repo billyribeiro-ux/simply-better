@@ -180,6 +180,57 @@ def paper(
     _resolve_paper(cfg, bundle, session, now_et)
 
 
+@app.command()
+def daily(
+    config: str = typer.Option("config.yaml", "--config"),
+    train_from: str = typer.Option("2025-01-02", "--train-from",
+                                   help="history start for the nightly retrain"),
+) -> None:
+    """Hands-free daily loop (run after the close):
+
+    1. refresh market data (bootstraps the full history on a cold cache);
+    2. resolve today's paper trades with the bundle that actually generated
+       them (never the retrained one — record integrity);
+    3. retrain the production model through today for tomorrow's session;
+    4. publish the live + paper artifacts.
+    """
+    cfg = load_config(config)
+    today = live_mod.now_et_naive().date()
+    start = date.fromisoformat(train_from)
+    typer.echo(f"daily loop for {today}")
+
+    # 1. data: cold caches (fresh CI runners) get the full history
+    from .data import Store, ingest as ingest_data
+    store = Store(cfg)
+    b5 = store.load_bars(cfg.raw["data"]["detect_tf"], cfg.universe[0])
+    n_days = (b5.select(b5["ts"].dt.date().alias("d")).unique().height
+              if b5.height else 0)
+    if n_days < 140:
+        typer.echo(f"cache has {n_days} sessions — full bootstrap ingest")
+        ingest_data(cfg, start, today)
+    else:
+        live_mod.refresh_data(cfg, today)
+
+    # 2. resolve today's paper record with the bundle that traded it
+    now_et = live_mod.now_et_naive()
+    try:
+        bundle = production.load_bundle(cfg)
+        report = live_mod.scan_live(cfg, bundle, today, now_et)
+        live_mod.write_live_json(cfg, report)
+        live_mod.persist_live(cfg, report)
+        _resolve_paper(cfg, bundle, today, now_et)
+    except RuntimeError as exc:
+        typer.echo(f"no usable bundle for paper resolution ({exc}) — "
+                   "first run trains one below")
+
+    # 3. retrain through today -> tomorrow's bundle
+    new_bundle = production.train_production(cfg, start, today)
+    production.save_bundle(cfg, new_bundle)
+    typer.echo(f"retrained through {today}: labeled={new_bundle.n_labeled} "
+               f"thr={new_bundle.fm.threshold:.3f} rules={len(new_bundle.rules)}")
+    typer.echo("daily loop complete")
+
+
 @app.command("all")
 def run_all(
     date_from: str = typer.Option(..., "--from", help="YYYY-MM-DD"),

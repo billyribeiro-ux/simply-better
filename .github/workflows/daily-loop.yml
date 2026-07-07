@@ -1,0 +1,65 @@
+# Hands-free adaptation loop: every trading day after the US close, refresh
+# data, resolve the day's paper trades with the bundle that generated them,
+# retrain the production model through today, and publish the updated live +
+# paper artifacts back to the branch.
+#
+# Requires one repository secret: FMP_API_KEY (Settings -> Secrets -> Actions).
+# The engine cache (data/) rolls forward between runs via actions/cache, so
+# only the first run pays for the full history ingest.
+name: daily-loop
+
+on:
+  schedule:
+    - cron: "15 21 * * 1-5" # 17:15 EDT / 16:15 EST — always after the close
+  workflow_dispatch:
+
+concurrency:
+  group: daily-loop
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/amazing-wright-ndu3up
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: restore engine cache
+        uses: actions/cache@v4
+        with:
+          path: data
+          key: mie-engine-cache-${{ github.run_id }}
+          restore-keys: |
+            mie-engine-cache-
+
+      - name: install engine
+        run: pip install -e .
+
+      - name: run daily loop
+        env:
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+        run: |
+          if [ -z "$FMP_API_KEY" ]; then
+            echo "::error::FMP_API_KEY secret is not set — add it under Settings -> Secrets -> Actions"
+            exit 1
+          fi
+          mie daily
+
+      - name: publish artifacts
+        run: |
+          git config user.name "mie-daily-loop"
+          git config user.email "mie-daily-loop@users.noreply.github.com"
+          git add dashboard/static/data
+          if git diff --cached --quiet; then
+            echo "no artifact changes to publish"
+          else
+            git commit -m "daily loop: $(date -u +%Y-%m-%d) refresh, paper resolution, retrain"
+            git push
+          fi
