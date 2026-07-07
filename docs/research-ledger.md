@@ -39,6 +39,17 @@ per-fold geometry × threshold search; keep that number in sync with this file.
   separately on forward months.
 - Re-audit ALL of the above after ≥3 months of frozen-spec forward walk-forward.
 
+## Second experiment cycle (2026-07-07, post-slate)
+
+| experiment | variants | outcome |
+| --- | --- | --- |
+| selection-layer audit | 2 | **closed, positively**: on the gate-on OOS record, taken trades run +0.051R vs −0.012R all-decided and −0.131R low-prob skips; per-fold IC(prob, pnl) +0.152, 9/13 folds positive; "no threshold" counterfactual is WORSE (−0.028R). The model+threshold layer adds ~+0.08R/trade of selection value. The earlier "anti-selection" alarm was a geometry-vintage artifact. |
+| underwater time-stop | 9 | **dead, exactly**: with close_path prices, every (T, gap) ∈ {45,60,90}×{0,0.2,0.4} is negative (−0.001..−0.044R, ≤7/19 months positive). The research program's bounded midpoint (+0.015R) did not survive exact evaluation. |
+| closer anchor fracs (0.25, 0.382 added to the per-fold search) | 8 | **rejected by pre-registered criterion**: expectancy +0.021 vs baseline +0.080, net −$10.8k vs −$2.4k. The "targets too far" hypothesis does not convert through the honest harness. Not adopted; not committed. |
+| trig_range_atr ablation | 1 | **rejected by pre-registered criterion** (run c68753bbb833): AUC(test) mean 0.5535 vs 0.5763 gate-on baseline — the screened +0.015 gain reversed under fold-honest per-fold geometry, exactly the deflation objection raised in verification. Expectancy flat (+0.0025). Feature code reverted; candidate is dead for the model on this record. |
+
+Trials charged: external_trials 148 → **168** (+2 audit, +9 time-stop, +8 fracs, +1 ablation, +2 rounding reserve).
+
 ## Known record caveats
 
 - **82/465 event drift**: 82 trades of run f4e6c58b4603 do not rematch a

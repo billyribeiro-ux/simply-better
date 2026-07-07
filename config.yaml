@@ -54,10 +54,10 @@ model:
   calibrate: true         # isotonic calibration on out-of-fold train probs
   oof_folds: 4            # expanding chronological blocks for OOF probabilities
   ensemble_seeds: 3       # seed-bagged LightGBM members, probabilities averaged
-  # research-program trials charged into DSR deflation on top of the
-  # geometry x threshold search: 11 entry-timing + 20 loss-filters +
-  # 19 features + 38 symbol-gating + 20 exits + 40 regime-gating (2026-07)
-  external_trials: 148
+  # research trials charged into DSR deflation on top of the geometry x
+  # threshold search — full breakdown in docs/research-ledger.md
+  # (148 from the 2026-07 program + 20 from the second experiment cycle)
+  external_trials: 168
   params:
     num_leaves: 31
     learning_rate: 0.05
