@@ -50,6 +50,26 @@ per-fold geometry × threshold search; keep that number in sync with this file.
 
 Trials charged: external_trials 148 → **168** (+2 audit, +9 time-stop, +8 fracs, +1 ablation, +2 rounding reserve).
 
+## PRE-REGISTERED: the 2024 holdout test (declared 2026-07-07, before results)
+
+FMP serves 1-minute data through 2024. No search, tuning, or selection in
+this program has ever touched 2024 — every spec value (gate 0.45,
+no_new_after 14:50, geometry/threshold grids, external trials) was chosen
+on 2025-01→2026-07 only. Running the frozen spec over 2024-01→2026-07
+makes the 2024-H2 walk-forward folds (models trained on 2024 data only,
+per the expanding window) an untouched holdout.
+
+Pre-registered read, stated before the run:
+- (a) 2024-H2 taken-trade expectancy > 0 on ≥ 50 trades → first positive
+  untouched-data evidence; strategy stays live, forward record continues.
+- (b) expectancy ≤ 0 → third independent replication of no-edge, now on
+  virgin data; the setup CONCEPT (not its tuning) goes under review.
+Either way the full 30-month history feeds subsequent production training.
+
+Caveat recorded: 2024 is untouched by the *tuning*, but the setup concept
+was designed by people who knew markets generally — this is weaker than
+true forward data, stronger than anything else available today.
+
 ## Known record caveats
 
 - **82/465 event drift**: 82 trades of run f4e6c58b4603 do not rematch a
