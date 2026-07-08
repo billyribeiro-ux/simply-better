@@ -198,6 +198,55 @@ class TestSlippageDirection:
 
 
 # ---------------------------------------------------------------------------
+# point-in-time accounting: a still-OPEN position's future PnL must never
+# reach the sizing of, or the kill switch for, a later entry (invariant class
+# of the slippage-sign fix). Regression for the entry-vs-exit crediting bug.
+# ---------------------------------------------------------------------------
+class TestPointInTimeAccounting:
+    @staticmethod
+    def _t(day: date, h0: int, m0: int, h1: int, m1: int,
+           entry: float, exit_: float) -> dict:
+        return {
+            "session_date": day,
+            "entry_ts": datetime(day.year, day.month, day.day, h0, m0),
+            "exit_ts": datetime(day.year, day.month, day.day, h1, m1),
+            "side": 1.0, "stop_atr": 1.0, "atr": 4.0,
+            "entry_px": entry, "exit_px": exit_,
+        }
+
+    def test_open_winner_does_not_upsize_later_entry(self, cfg):
+        # A: big winner entered 10:00, still open until 15:00.
+        # B: entered 11:00 while A is open. B must be sized off starting
+        # equity (risk 0.5% of 100k / stop $4 = 125 shares), NOT off equity
+        # inflated by A's not-yet-realized win.
+        d = date(2026, 3, 2)
+        taken = pl.DataFrame([
+            self._t(d, 10, 0, 15, 0, 100.0, 130.0),   # A: open all session
+            self._t(d, 11, 0, 11, 30, 100.0, 100.0),  # B: sized while A open
+        ])
+        trades, _, _ = backtest.run(cfg, taken)
+        assert trades.height == 2
+        assert int(trades["shares"][0]) == 125
+        assert int(trades["shares"][1]) == 125    # would be 129 under the leak
+
+    def test_open_loser_does_not_arm_kill_switch(self, cfg):
+        # A: -$5000 (-5%) loser entered 10:00 but not realized until 15:00.
+        # B at 11:00 must NOT be suppressed (no loss is realized yet).
+        # C at 15:30 (after A closes) MUST be suppressed (realized -5% breach).
+        d = date(2026, 3, 2)
+        taken = pl.DataFrame([
+            self._t(d, 10, 0, 15, 0, 100.0, 60.0),    # A: open, latent loss
+            self._t(d, 11, 0, 11, 30, 100.0, 110.0),  # B: allowed (A still open)
+            self._t(d, 15, 30, 15, 45, 100.0, 110.0), # C: killed (A now realized)
+        ])
+        trades, _, _ = backtest.run(cfg, taken)
+        assert trades.height == 2
+        assert [ts.hour for ts in trades["entry_ts"].to_list()] == [10, 11]
+        assert float(trades["pnl_usd"][0]) < -4000    # A booked as the loser
+        assert float(trades["pnl_usd"][1]) > 0        # B booked, not suppressed
+
+
+# ---------------------------------------------------------------------------
 # day-type trend veto plumbing
 # ---------------------------------------------------------------------------
 def _lod_eff_expected(bars):
