@@ -160,6 +160,36 @@ jointly, the shipping configuration):
 - (c) joint degrades below concept-2's record → ORB rejected outright.
 No ORB parameter may be revisited on this range regardless of outcome.
 
+**VERDICT (run 28cb1337c4d8, 25 folds / 24 OOS months): outcome (a) — v3 adopted.**
+Joint record: 2,004 filled trades, expectancy **+0.1131R, 95% CI
+[+0.067, +0.161]** (tighter than concept-2's), net **+$7,212** after
+honest costs (6× concept-2's +$1,154 on the identical range), Sharpe
+0.284 vs 0.133, PSR 0.647 vs 0.564. ORB's own expectancy +0.0986R with
+CI [+0.035, +0.157] — zero-excluding, and each direction separately
+excludes zero (ORB_UP +0.075R [+0.005, +0.145] n=824; ORB_DOWN +0.140R
+[+0.033, +0.248] n=477). All three (a) conditions hold. Coverage: 4.63
+trades per traded day across the tape, up from ~2.3.
+
+Honest counterweights, recorded with the win:
+- **ORB's own cost-charged dollars are NEGATIVE: −$9,875** over 1,301
+  trades, concentrated in ORB_UP (−$17,878; ORB_DOWN +$8,003). The
+  R-vs-USD divergence is the known tight-stop friction drag (~0.10R per
+  trade at 2 bps + commission on 0.2-ATR stops). The joint dollar
+  result still improves because the model/veto layer and LOD_BREAK's
+  +$30,671 carry the book. Per the standing concept-2 rule, the cost
+  structure (stop width vs share count) may only be revisited as a
+  pre-registered experiment after ≥3 months of forward record — no
+  retroactive tuning, and no post-hoc cherry-pick of ORB_DOWN alone.
+- **Max drawdown deepened to −23.3%** from −12.3% — more trades at
+  constant per-trade risk buy coverage at the price of deeper aggregate
+  drawdown.
+- DSR 0.0001 at 29,253 trials: the deflator still refuses
+  certification. This remains an EXPLORATORY edge on development data;
+  only the forward record confirms.
+Per the spec-revision note above, the frozen-spec forward clock
+RESTARTS at v3 (production retrained on the joint spec through
+2026-07-07). The paper record continues uninterrupted, tagged by setup.
+
 ## Known record caveats
 
 - **82/465 event drift**: 82 trades of run f4e6c58b4603 do not rematch a
