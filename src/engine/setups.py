@@ -21,6 +21,8 @@ HOD_FADE = "HOD_FADE"
 LOD_RECLAIM = "LOD_RECLAIM"
 HOD_BREAK = "HOD_BREAK"       # long continuation of a new high, with the trend
 LOD_BREAK = "LOD_BREAK"       # short continuation of a new low, with the trend
+ORB_UP = "ORB_UP"             # long break of the opening range high
+ORB_DOWN = "ORB_DOWN"         # short break of the opening range low
 
 
 def _hm(s: str) -> int:
@@ -38,6 +40,9 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
     hod_cfg, lod_cfg = scfg["hod_fade"], scfg["lod_reclaim"]
     hb_cfg = scfg.get("hod_break", {})
     lb_cfg = scfg.get("lod_break", {})
+    ou_cfg = scfg.get("orb_up", {})
+    od_cfg = scfg.get("orb_down", {})
+    or_close_mins = _hm(cfg.session["open"]) + int(ou_cfg.get("or_minutes", 30))
     cooldown = int(scfg["cooldown_bars"])
     max_side = int(scfg["max_per_side_per_day"])
     min_trig = _hm(cfg.session["min_trigger"])
@@ -78,8 +83,14 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
         n_new_highs, n_new_lows = 0, 0
         cum_pv, cum_v = 0.0, 0.0
         last_trig = {HOD_FADE: -10**9, LOD_RECLAIM: -10**9,
-                     HOD_BREAK: -10**9, LOD_BREAK: -10**9}
-        count = {HOD_FADE: 0, LOD_RECLAIM: 0, HOD_BREAK: 0, LOD_BREAK: 0}
+                     HOD_BREAK: -10**9, LOD_BREAK: -10**9,
+                     ORB_UP: -10**9, ORB_DOWN: -10**9}
+        count = {HOD_FADE: 0, LOD_RECLAIM: 0, HOD_BREAK: 0, LOD_BREAK: 0,
+                 ORB_UP: 0, ORB_DOWN: 0}
+
+        # opening range: frozen by wall clock once the OR window has closed
+        or_high, or_low = -np.inf, np.inf
+        or_done = False
 
         # anchors: prior-day POC from the carried histogram, developing POC
         # built incrementally (bin width fixed at session start from prior ATR)
@@ -111,6 +122,13 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
             bar_close_mins = ts[i].hour * 60 + ts[i].minute + 5
             if bar_close_mins <= 10 * 60 + 30:
                 eff_frozen = eff_i
+
+            # opening range accumulates while the OR window is open, then freezes
+            if bar_close_mins <= or_close_mins:
+                or_high = max(or_high, h[i])
+                or_low = min(or_low, lo[i])
+            else:
+                or_done = or_high > -np.inf
 
             new_hod = h[i] > hod
             new_lod = lo[i] < lod
@@ -297,6 +315,58 @@ def detect(cfg: Config, symbol: str, bars5: pl.DataFrame,
                 })
                 last_trig[LOD_BREAK] = i
                 count[LOD_BREAK] += 1
+
+            # ---- ORB UP (long break of the opening range high) -----------
+            # concept 3 (coverage): first 5-min close above the frozen OR
+            # high with an up bar; mirrored below for ORB_DOWN
+            if (
+                bool(ou_cfg.get("enabled", False))
+                and or_done
+                and cl[i] > or_high
+                and cl[i] > o[i]
+                and count[ORB_UP] < max_side
+                and i - last_trig[ORB_UP] >= cooldown
+            ):
+                rooms = rooms_for(1.0)
+                events.append({
+                    **base,
+                    **rooms,
+                    "max_room_atr": float(max(rooms.values())),
+                    "dt_eff_h1_aligned": float(-(1.0) * eff_frozen),
+                    "setup": ORB_UP,
+                    "side": 1.0,
+                    "level": float(or_high),
+                    "range_ext_atr": float((h[i] - day_open) / atr),
+                    "wick_ratio": float(upper_wick / rng),
+                    "n_extremes": float(n_new_highs),
+                })
+                last_trig[ORB_UP] = i
+                count[ORB_UP] += 1
+
+            # ---- ORB DOWN (short break of the opening range low) ---------
+            if (
+                bool(od_cfg.get("enabled", False))
+                and or_done
+                and cl[i] < or_low
+                and cl[i] < o[i]
+                and count[ORB_DOWN] < max_side
+                and i - last_trig[ORB_DOWN] >= cooldown
+            ):
+                rooms = rooms_for(-1.0)
+                events.append({
+                    **base,
+                    **rooms,
+                    "max_room_atr": float(max(rooms.values())),
+                    "dt_eff_h1_aligned": float(-(-1.0) * eff_frozen),
+                    "setup": ORB_DOWN,
+                    "side": -1.0,
+                    "level": float(or_low),
+                    "range_ext_atr": float((day_open - lo[i]) / atr),
+                    "wick_ratio": float(lower_wick / rng),
+                    "n_extremes": float(n_new_lows),
+                })
+                last_trig[ORB_DOWN] = i
+                count[ORB_DOWN] += 1
 
         # finished session becomes the prior-day histogram for the next one
         pd_hist = day_hist

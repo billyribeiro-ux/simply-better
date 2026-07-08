@@ -48,6 +48,14 @@ setups:
     ext_min_atr: 0.35
     body_frac_min: 0.5
     eff_min: 0.30
+  # concept 3 — opening range breakout (pre-registered 2026-07-08, ledger).
+  # Fires long and/or short on most sessions — the coverage concept.
+  orb_up:
+    enabled: true
+    or_minutes: 30        # opening range = bars closing <= 10:00
+  orb_down:
+    enabled: true
+    or_minutes: 30
 
 entry:
   confirm_bars_1m: 15     # 1-min bars allowed for break confirmation
@@ -71,8 +79,8 @@ model:
   ensemble_seeds: 3       # seed-bagged LightGBM members, probabilities averaged
   # research trials charged into DSR deflation on top of the geometry x
   # threshold search — full breakdown in docs/research-ledger.md
-  # (148 program + 20 second cycle + 6 concept-2 design DOF)
-  external_trials: 174
+  # (148 program + 20 second cycle + 6 concept-2 + 4 concept-3 design DOF)
+  external_trials: 178
   params:
     num_leaves: 31
     learning_rate: 0.05

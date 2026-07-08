@@ -131,6 +131,35 @@ structure (stop width vs share count) may only be revisited as a
 pre-registered experiment after ≥3 months of forward record. The paper
 record now spans two concepts; trades are distinguishable by setup.
 
+## PRE-REGISTERED: concept 3 — opening range breakout (declared 2026-07-08, before any run)
+
+Motivation: coverage. The tape prints ~19% of cumulative daily range across
+the universe; two concepts capture a sliver of the day's motion. ORB fires
+in one or both directions on most sessions for most symbols — the highest
+signal-frequency classic pattern. Parameters fixed A PRIORI, zero tuning:
+opening range = first 30 minutes (bars closing <= 10:00); ORB_UP triggers
+on the first 5-min bar CLOSING above the OR high with close > open
+(ORB_DOWN mirrors below the OR low); standard 1-min confirmation,
+cooldown, and per-side caps; no additional filters. Trend veto applies at
+decision time as usual (it suppresses counter-trend breaks). Design DOF
+charged: +4 external trials (174 → 178).
+
+Spec-revision note, recorded honestly: enabling a new setup family changes
+the joint model and geometry, so the frozen-spec forward clock RESTARTS at
+adoption (v3). The paper record continues uninterrupted — trades are
+tagged by setup and trained_through — but forward-confirmation counting
+for the joint spec begins anew. This is a deliberate trade-off ordered by
+the owner: coverage now, at the price of a longer confirmation runway.
+
+Pre-registered read of the single 30-month walk-forward run (breaks + ORB
+jointly, the shipping configuration):
+- (a) joint expectancy_r > +0.05 AND joint net > 0 AND the ORB setups'
+  own expectancy > 0 → ORB joins the live spec (v3);
+- (b) joint holds but ORB's own expectancy ≤ 0 → ORB stays disabled;
+  concept-2 spec unchanged (clock not reset);
+- (c) joint degrades below concept-2's record → ORB rejected outright.
+No ORB parameter may be revisited on this range regardless of outcome.
+
 ## Known record caveats
 
 - **82/465 event drift**: 82 trades of run f4e6c58b4603 do not rematch a

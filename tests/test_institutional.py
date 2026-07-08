@@ -341,3 +341,57 @@ class TestPeriodReport:
         assert len(rows) == 3
         assert rows[0]["entry_action"] == "BUY"
         assert rows[1]["taken"] == "False"
+
+
+# ---------------------------------------------------------------------------
+# concept 3: opening range breakout detection
+# ---------------------------------------------------------------------------
+class TestOrbDetection:
+    def test_orb_fires_after_or_freeze_both_directions(self, cfg):
+        from engine import setups
+        raw = dict(cfg.raw)
+        raw["setups"] = {**raw["setups"]}
+        c2 = type(cfg)(raw=raw, root=cfg.root)
+        day = date(2025, 3, 10)
+        t0 = datetime(2025, 3, 10, 9, 30)
+        # OR = bars CLOSING <= 10:00: the six 09:30-09:55 bars, span
+        # 99.5-100.5. The 10:00-open bar closes 10:05, so it is OUTSIDE the
+        # OR: its 100.6 high must not extend the range and its 100.4 close
+        # does not break it. Bar 7 (10:05) closes above the OR high -> ORB_UP;
+        # bar 14 (10:40) closes below the OR low -> ORB_DOWN.
+        bars = []
+        for i in range(6):                       # opening range
+            bars.append((100.0, 100.5, 99.5, 100.1, 1000.0))
+        bars.append((100.1, 100.6, 100.0, 100.4, 900.0))    # 10:00 outside OR, no break
+        bars.append((100.4, 101.2, 100.3, 101.0, 1500.0))   # 10:05 ORB_UP
+        for i in range(5):
+            bars.append((101.0, 101.1, 100.6, 100.8, 800.0))
+        bars.append((100.8, 100.9, 99.6, 99.7, 900.0))      # 10:35 close 99.7 > 99.5, no break
+        bars.append((99.7, 99.8, 99.0, 99.2, 1200.0))       # 10:40 ORB_DOWN (close < 99.5)
+        for i in range(4):
+            bars.append((99.2, 99.4, 99.0, 99.1, 700.0))
+        rows = [(t0 + timedelta(minutes=5 * i), o, h, lo, c, v, "TEST")
+                for i, (o, h, lo, c, v) in enumerate(bars)]
+        b5 = pl.DataFrame(rows, schema=["ts", "open", "high", "low", "close",
+                                        "volume", "symbol"], orient="row")
+        ctx = pl.DataFrame({
+            "date": [day], "atr": [2.0], "gk_vol_z": [0.0],
+            "prior_high": [100.8], "prior_low": [99.2], "prior_close": [100.0],
+        })
+        from engine.setups import detect
+        events = detect(c2, "TEST", b5, ctx)
+        by = {}
+        for e in events:
+            by.setdefault(e["setup"], []).append(e)
+        assert "ORB_UP" in by and "ORB_DOWN" in by
+        up = by["ORB_UP"][0]
+        assert up["side"] == 1.0
+        assert up["level"] == pytest.approx(100.5)   # frozen OR high (09:30-09:55 bars)
+        assert up["trigger_ts"].hour == 10 and up["trigger_ts"].minute == 5
+        down = by["ORB_DOWN"][0]
+        assert down["side"] == -1.0
+        assert down["level"] == pytest.approx(99.5)
+        # nothing may trigger while the OR window is still open (first
+        # eligible trigger bar opens 10:05, after the OR freezes)
+        assert all(e["trigger_ts"] >= datetime(2025, 3, 10, 10, 5)
+                   for e in by["ORB_UP"] + by["ORB_DOWN"])
