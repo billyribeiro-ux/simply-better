@@ -36,25 +36,28 @@ setups:
     enabled: false        # concept refuted 3x incl. 2024 holdout (ledger)
     ext_min_atr: 0.35
     wick_frac_min: 0.35
-  # concept 2 — trend continuation (pre-registered 2026-07-07, ledger).
-  # Parameters fixed a priori by mirroring; NEVER tuned on this range.
+  # concept 2 — trend continuation. DISABLED 2026-07-08: outcome (b),
+  # research bench. After the entry-vs-exit accounting fix the honest net is
+  # −$6,578 (run 40ff77b9cc42) — the +0.086R edge does not survive costs.
+  # Kept in code for the pre-registered cost-structure experiment (ledger).
   hod_break:
-    enabled: true
+    enabled: false
     ext_min_atr: 0.35     # extension above open, mirrored from the fade spec
     body_frac_min: 0.5    # close in the break-side half of the trigger bar
     eff_min: 0.30         # session efficiency already aligned with the break
   lod_break:
-    enabled: true
+    enabled: false
     ext_min_atr: 0.35
     body_frac_min: 0.5
     eff_min: 0.30
-  # concept 3 — opening range breakout (pre-registered 2026-07-08, ledger).
-  # Fires long and/or short on most sessions — the coverage concept.
+  # concept 3 — opening range breakout. REJECTED 2026-07-08: outcome (c). The
+  # 2026-07-08 adoption rested on a lookahead-inflated +$7,212; honest joint
+  # net is −$27,523 and degrades concept-2's record. Disabled (ledger).
   orb_up:
-    enabled: true
+    enabled: false
     or_minutes: 30        # opening range = bars closing <= 10:00
   orb_down:
-    enabled: true
+    enabled: false
     or_minutes: 30
 
 entry:
@@ -79,8 +82,8 @@ model:
   ensemble_seeds: 3       # seed-bagged LightGBM members, probabilities averaged
   # research trials charged into DSR deflation on top of the geometry x
   # threshold search — full breakdown in docs/research-ledger.md
-  # (148 program + 20 second cycle + 6 concept-2 + 4 concept-3 design DOF)
-  external_trials: 178
+  # (148 program + 20 cycle2 + 6 concept-2 + 4 concept-3 + 2 cost-structure DOF)
+  external_trials: 180
   params:
     num_leaves: 31
     learning_rate: 0.05

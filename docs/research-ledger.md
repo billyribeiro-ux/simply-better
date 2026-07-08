@@ -5,6 +5,74 @@ what was adopted, what was closed, and what is parked under pre-registration.
 The DSR deflation charges `model.external_trials` (config.yaml) on top of the
 per-fold geometry × threshold search; keep that number in sync with this file.
 
+## 2026-07-08 — CORRECTION: entry-vs-exit accounting leak overturns the USD record
+
+A parallel-agent audit (cycle 1 of the self-paced research loop) found a
+lookahead bug in `backtest.run` and I verified it independently before acting.
+The simulator credited each trade's full realized PnL to `equity` and to the
+day's running loss at ENTRY-processing time, while the position's exit is hours
+later. Since 74.4% of trades enter while an earlier position is still open, the
+equity that SIZED each trade and the day-loss that ARMED the kill switch already
+contained the FUTURE outcomes of open positions. Same invariant class as the
+iteration-one slippage-sign inversion. Fixed: event-driven accounting, PnL
+realized only at `exit_ts` (commit "Fix lookahead in portfolio sim"), regression
+tests pin the invariant.
+
+**What it does to the record.** R-space expectancy is share-independent and
+survives — but the taken SET changes, because the old kill switch was silently
+deleting future-known losers. Honest re-runs over the identical frozen spec,
+2024-01-02 → 2026-07-07, embargoed walk-forward:
+
+| spec (honest, exit-time accounting) | trades | expectancy_r | 95% CI | net USD | Sharpe |
+| ----------------------------------- | ------ | ------------ | ------ | ------- | ------ |
+| concept-2 (breaks only)  run 40ff77b9cc42 | 1013 | +0.0862R | [+0.019, +0.155] | **−$6,578**  | −0.168 |
+| v3 (breaks + ORB)        run 016e5fae102e | 2146 | +0.0797R | [+0.031, +0.128] | **−$27,523** | −0.545 |
+| v3, kill switch OFF      run c9ea733d75dc | 2393 | +0.0733R | —                | **−$35,677** | −0.722 |
+
+Decomposition of v3 old→new (28cb1337c4d8 → 016e5fae102e): 165 trades the buggy
+kill switch used to suppress are re-admitted at **−0.271R / −$26,721** — the days
+the sim previously "knew" were bad. That single set is the whole swing.
+
+**Honest verdicts, applied per the letter of each pre-registration:**
+- **concept-3 ORB → outcome (c): REJECTED.** Joint net (−$27,523) is required to
+  be > 0 and must not degrade below concept-2's record; it does both. ORB
+  degrades concept-2's −$6,578 to −$27,523 (ORB_UP alone −$32,148). Both ORB
+  setups disabled in config. The v3 "adoption" of 2026-07-08 is VACATED — it
+  rested on the contaminated +$7,212 number.
+- **concept-2 breaks → outcome (b): WEAK, research bench.** Its pre-registration
+  triggers (b) on `net ≤ 0`. Honest net is −$6,578. The R-edge is real
+  (+0.086R, CI excludes zero) but does NOT survive transaction costs under the
+  current tight-stop geometry. Live firing disabled; the concept stays in code
+  for the cost-structure experiment below.
+- **The engine currently ships NO net-profitable live edge.** Every prior
+  positive USD record (v1 +$1,154, v2/v3 +$7,212) was an accounting artifact.
+  Stated plainly and without hedging: after honest costs, this strategy as
+  specified loses money. The signal has genuine pre-cost R-predictive value;
+  converting it to positive dollars is unsolved.
+
+Config change: `hod_break`, `lod_break`, `orb_up`, `orb_down` all `enabled:
+false`. `mie live`/`mie daily` therefore emit no signals until a spec clears a
+pre-registered net-of-cost criterion. The production bundle on disk (v3) is
+inert (detection disabled) and superseded.
+
+## PRE-REGISTERED: cost-structure experiment (declared 2026-07-08, before any run)
+
+Diagnosis fixed a priori: the real +0.086R edge dies because 0.2-ATR stops
+produce ~500-share positions whose 2 bps slippage + commission (~$40-45/trade,
+≈0.06R) exceeds the edge. The geometry search optimizes R (frictionless), so it
+is blind to this. Experiment (parameters fixed by theory, not fitted): change
+the geometry objective to **net-of-cost expectancy** — subtract the modeled
+round-trip cost (slippage_bps + commission, from config execution) converted to
+R at each candidate stop width, then re-run the frozen walk-forward. No other
+change; no per-cell hand-tuning. Pre-registered read of the single run:
+- (a) net-of-cost geometry yields concept-2 joint net > 0 AND expectancy_r still
+  > +0.05 → adopt as the shipping spec (v4), forward-EXPLORATORY;
+- (b) net > improves but stays ≤ 0 → the edge is real but sub-cost on this
+  universe; document and keep on the bench (no live spec);
+- (c) expectancy_r ≤ +0.05 after the change → the tight-stop R-edge was itself
+  fragile; concept-2 closed.
+Design DOF charged: +2 external trials (178 → 180). This is the next loop cycle.
+
 ## Trials charged (2026-07 multi-agent research program)
 
 | program            | variants | outcome |
@@ -108,6 +176,12 @@ Pre-registered read of the single 30-month walk-forward run:
   the universe/timeframe itself goes under review.
 No parameter may be revisited on this range regardless of outcome.
 
+> **CORRECTED 2026-07-08** — the +$1,154 net below is contaminated by the
+> entry-vs-exit accounting leak (top-of-file CORRECTION). Honest re-run
+> (40ff77b9cc42): +0.0862R but **net −$6,578**, so concept-2 falls to outcome
+> (b) research bench, not the (a) live-EXPLORATORY promotion recorded here. The
+> R-edge is real; it does not survive costs. Preserved for audit.
+
 **VERDICT (run 65603170d228, 25 folds / 24 OOS months): outcome (a).**
 998 filled trades, expectancy **+0.0997R with 95% CI [+0.027, +0.172]** —
 the first zero-excluding positive interval in this program — 17/24 months
@@ -159,6 +233,12 @@ jointly, the shipping configuration):
   concept-2 spec unchanged (clock not reset);
 - (c) joint degrades below concept-2's record → ORB rejected outright.
 No ORB parameter may be revisited on this range regardless of outcome.
+
+> **VACATED 2026-07-08** — this verdict rested on run 28cb1337c4d8, whose
+> +$7,212 net came from the entry-vs-exit accounting leak (see the CORRECTION
+> section at the top of this file). Under honest accounting the joint net is
+> −$27,523 and ORB is REJECTED per outcome (c). The text below is preserved as
+> the contaminated record it was, not deleted, so the mistake stays auditable.
 
 **VERDICT (run 28cb1337c4d8, 25 folds / 24 OOS months): outcome (a) — v3 adopted.**
 Joint record: 2,004 filled trades, expectancy **+0.1131R, 95% CI

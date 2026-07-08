@@ -400,6 +400,10 @@ class TestOrbDetection:
         from engine import setups
         raw = dict(cfg.raw)
         raw["setups"] = {**raw["setups"]}
+        # production config disables ORB (rejected, ledger 2026-07-08); the
+        # detector code is still exercised here, so re-enable it for the test.
+        for s in ("orb_up", "orb_down"):
+            raw["setups"][s] = {**raw["setups"][s], "enabled": True}
         c2 = type(cfg)(raw=raw, root=cfg.root)
         day = date(2025, 3, 10)
         t0 = datetime(2025, 3, 10, 9, 30)
