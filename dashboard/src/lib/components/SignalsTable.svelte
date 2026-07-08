@@ -68,6 +68,8 @@
 	let setupFilter = $state('ALL');
 	let takenFilter = $state('ALL');
 	let outcomeFilter = $state('ALL');
+	let dateFrom = $state('');
+	let dateTo = $state('');
 	let page = $state(0);
 
 	const symbols = $derived([...new Set(signals.map((s) => s.symbol))].sort());
@@ -76,6 +78,8 @@
 	const filtered = $derived(
 		signals.filter(
 			(s) =>
+				(dateFrom === '' || s.date >= dateFrom) &&
+				(dateTo === '' || s.date <= dateTo) &&
 				(symbolFilter === 'ALL' || s.symbol === symbolFilter) &&
 				(setupFilter === 'ALL' || s.setup === setupFilter) &&
 				(takenFilter === 'ALL' || (takenFilter === 'TAKEN') === s.taken) &&
@@ -121,6 +125,24 @@
 
 <div class="signals">
 	<div class="filters">
+		<div class="group" role="group" aria-label="Filter by period">
+			<span class="eyebrow">period</span>
+			<input
+				class="chip num"
+				type="date"
+				aria-label="From date"
+				bind:value={dateFrom}
+				onchange={() => (page = 0)}
+			/>
+			<span class="dim num">→</span>
+			<input
+				class="chip num"
+				type="date"
+				aria-label="To date"
+				bind:value={dateTo}
+				onchange={() => (page = 0)}
+			/>
+		</div>
 		<div class="group" role="group" aria-label="Filter by symbol">
 			<span class="eyebrow">symbol</span>
 			{#each ['ALL', ...symbols] as sym (sym)}
@@ -272,6 +294,12 @@
 		border: 1px solid var(--hairline);
 		color: var(--graphite);
 		background: var(--paper);
+		border-radius: 0;
+	}
+
+	input.chip {
+		font-family: var(--font-mono);
+		color: var(--ink);
 	}
 
 	.chip:hover:not(:disabled) {

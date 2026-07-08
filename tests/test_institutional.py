@@ -276,3 +276,68 @@ class TestPathInstrumentation:
         # signed eod excursion consistent with the stored close path (short)
         assert s.eod_signed_atr == pytest.approx(
             (s.entry_px - float(s.close_path[-1])) / 2.0, abs=1e-4)
+
+
+# ---------------------------------------------------------------------------
+# period report builder
+# ---------------------------------------------------------------------------
+class TestPeriodReport:
+    ART = {
+        "run_id": "testrun",
+        "signals": [
+            {"id": 1, "symbol": "NVDA", "date": "2026-05-04", "setup": "HOD_BREAK",
+             "side": "LONG", "trigger_ts": "2026-05-04T10:30:00",
+             "entry_ts": "2026-05-04T10:36:00", "entry_px": 100.0,
+             "stop_px": 99.0, "target_px": 102.0,
+             "exit_ts": "2026-05-04T11:10:00", "exit_px": 102.0,
+             "exit_reason": "target", "prob": 0.61, "threshold": 0.55,
+             "taken": True, "outcome": "WIN", "pnl_r": 2.0,
+             "pnl_usd": 500.0, "shares": 250, "mae_r": 0.2, "mfe_r": 2.0},
+            {"id": 2, "symbol": "TSLA", "date": "2026-05-05", "setup": "LOD_BREAK",
+             "side": "SHORT", "trigger_ts": "2026-05-05T11:00:00",
+             "entry_ts": "2026-05-05T11:04:00", "entry_px": 300.0,
+             "stop_px": 303.0, "target_px": 294.0,
+             "exit_ts": "2026-05-05T12:00:00", "exit_px": 303.0,
+             "exit_reason": "stop", "prob": 0.40, "threshold": 0.55,
+             "taken": False, "outcome": "LOSS", "pnl_r": -1.0,
+             "pnl_usd": None, "shares": None, "mae_r": 1.0, "mfe_r": 0.1},
+            {"id": 3, "symbol": "SPY", "date": "2026-06-30", "setup": "HOD_BREAK",
+             "side": "LONG", "trigger_ts": "2026-06-30T10:30:00",
+             "entry_ts": "2026-06-30T10:33:00", "entry_px": 600.0,
+             "stop_px": 598.0, "target_px": 606.0,
+             "exit_ts": "2026-06-30T15:54:00", "exit_px": 598.0,
+             "exit_reason": "stop", "prob": 0.70, "threshold": 0.55,
+             "taken": True, "outcome": "LOSS", "pnl_r": -1.0,
+             "pnl_usd": -510.0, "shares": 250, "mae_r": 1.0, "mfe_r": 0.4},
+        ],
+    }
+
+    def test_window_filter_actions_and_kpis(self):
+        from engine import report
+        rep = report.build_report(self.ART, date(2026, 5, 1), date(2026, 5, 31))
+        assert rep["kpis"]["signals"] == 2          # SPY (June) excluded
+        assert rep["kpis"]["taken"] == 1 and rep["kpis"]["filled"] == 1
+        assert rep["kpis"]["win_rate"] == 100.0
+        assert rep["kpis"]["net_pnl_usd"] == 500.0
+        by_row = {r["symbol"]: r for r in rep["rows"]}
+        assert by_row["NVDA"]["entry_action"] == "BUY"
+        assert by_row["NVDA"]["exit_action"] == "SELL"
+        assert by_row["TSLA"]["entry_action"] == "SELL SHORT"
+        assert by_row["TSLA"]["exit_action"] == "COVER"
+        assert by_row["NVDA"]["day"] == "Mon" and by_row["TSLA"]["day"] == "Tue"
+
+    def test_files_written_and_note_for_precoverage(self, tmp_path):
+        import csv as csv_mod
+        from engine import report
+        rep = report.build_report(self.ART, date(2026, 1, 1), date(2026, 6, 30))
+        assert rep["note"] and "2026-05-04" in rep["note"]
+        md, csvp = report.write_report(rep, tmp_path)
+        text = md.read_text()
+        assert "BUY → SELL" in text               # taken long shows its actions
+        assert "10:36 @ 100.00" in text            # entry date+time+px present
+        assert "| 2026-05-05 | Tue | TSLA" in text  # skipped short listed too
+        with csvp.open() as fh:
+            rows = list(csv_mod.DictReader(fh))
+        assert len(rows) == 3
+        assert rows[0]["entry_action"] == "BUY"
+        assert rows[1]["taken"] == "False"
