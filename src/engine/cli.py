@@ -285,5 +285,56 @@ def run_all(
     typer.echo("done")
 
 
+# --------------------------------------------------------------------------
+# MIE-DL (pre-registered 2026-07-09; requires the optional [dl] extra)
+# --------------------------------------------------------------------------
+@app.command("dl-eval")
+def dl_eval(
+    config: str = typer.Option("config.yaml", "--config"),
+    horizon: int = typer.Option(0, "--horizon",
+                                help="override label horizon (0 = config)"),
+    no_shuffle: bool = typer.Option(False, "--no-shuffle-control"),
+) -> None:
+    """The pre-registered 7-fold evaluation. Prints the gate table; adopts
+    NOTHING automatically — flipping dl.enabled requires the ledger verdict."""
+    import json as json_mod
+    import uuid
+
+    from .dl.evaluate import run_eval, write_artifacts
+    cfg = load_config(config)
+    result, trade_rows = run_eval(
+        cfg, horizon_min=horizon or None, shuffle_control=not no_shuffle)
+    run_id = uuid.uuid4().hex[:12]
+    write_artifacts(cfg, result, trade_rows, run_id)
+    typer.echo(f"\ndl-eval {run_id}  horizon={result['horizon_min']}min  "
+               f"({result['wallclock_min']} min wall)")
+    typer.echo(json_mod.dumps({"pooled": result["pooled"],
+                               "shuffle_control_auc": result["shuffle_control_auc"],
+                               "gate_a": result["gate_a"],
+                               "gate_b": result["gate_b"]}, indent=2))
+
+
+@app.command("dl-train")
+def dl_train(
+    date_from: str = typer.Option(..., "--from"),
+    date_to: str = typer.Option(..., "--to"),
+    config: str = typer.Option("config.yaml", "--config"),
+) -> None:
+    """Fit the production DL bundle on all history in range (only meaningful
+    after the gates pass; the bundle alone never enables live emission)."""
+    from pathlib import Path
+
+    from .dl.dataset import build_caches
+    from .dl.train import fit
+    cfg = load_config(config)
+    a, b = _dates(date_from, date_to)
+    caches = build_caches(cfg)
+    bundle, _ = fit(cfg, caches, a, b)
+    path = cfg.root / cfg.raw["dl"]["model_path"]
+    bundle.save(Path(path))
+    typer.echo(f"DL bundle saved -> {path}  (s_min={bundle.s_min}, "
+               f"meta={bundle.meta})")
+
+
 if __name__ == "__main__":
     app()
