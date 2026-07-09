@@ -36,28 +36,28 @@ setups:
     enabled: false        # concept refuted 3x incl. 2024 holdout (ledger)
     ext_min_atr: 0.35
     wick_frac_min: 0.35
-  # concept 2 — trend continuation. DISABLED 2026-07-08: outcome (b),
-  # research bench. After the entry-vs-exit accounting fix the honest net is
-  # −$6,578 (run 40ff77b9cc42) — the +0.086R edge does not survive costs.
-  # Kept in code for the pre-registered cost-structure experiment (ledger).
+  # concept 2 — trend continuation. Re-enabled 2026-07-08 by owner order for
+  # the end-to-end root-cause audit (do NOT disable). Honest standing: the
+  # +0.086R edge does not survive costs (run 40ff77b9cc42, net −$6,578) — the
+  # audit is determining WHY, with evidence, before any adopt/reject call.
   hod_break:
-    enabled: false
+    enabled: true
     ext_min_atr: 0.35     # extension above open, mirrored from the fade spec
     body_frac_min: 0.5    # close in the break-side half of the trigger bar
     eff_min: 0.30         # session efficiency already aligned with the break
   lod_break:
-    enabled: false
+    enabled: true
     ext_min_atr: 0.35
     body_frac_min: 0.5
     eff_min: 0.30
-  # concept 3 — opening range breakout. REJECTED 2026-07-08: outcome (c). The
-  # 2026-07-08 adoption rested on a lookahead-inflated +$7,212; honest joint
-  # net is −$27,523 and degrades concept-2's record. Disabled (ledger).
+  # concept 3 — opening range breakout. Re-enabled 2026-07-08 by owner order
+  # for the audit. Honest standing: joint net −$27,523 (run 016e5fae102e);
+  # the audit is establishing the root cause of the no-net-edge result.
   orb_up:
-    enabled: false
+    enabled: true
     or_minutes: 30        # opening range = bars closing <= 10:00
   orb_down:
-    enabled: false
+    enabled: true
     or_minutes: 30
 
 entry:
