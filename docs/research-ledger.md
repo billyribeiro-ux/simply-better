@@ -5,6 +5,54 @@ what was adopted, what was closed, and what is parked under pre-registration.
 The DSR deflation charges `model.external_trials` (config.yaml) on top of the
 per-fold geometry × threshold search; keep that number in sync with this file.
 
+## 2026-07-08 — ROOT-CAUSE AUDIT: the edge is real but thin and execution-bound
+
+Owner ordered a deep end-to-end audit. 8 independent lenses (data, labels,
+features, model, edge-existence, geometry, cost, simulation), each adversarially
+verified; I reproduced the decisive numbers myself. Verdict, with hard evidence:
+
+**The pipeline is not broken and the edge is not absent.** Confirmed clean:
+labels reproduce BY HAND for all 1013 trades with zero mismatches; data faithful
+(NVDA split consistent, no bad ticks); 23 features hand-recompute exactly, no
+NaN/constant/Int8 bug; LightGBM trains correctly (AUC~0.51 is the honest
+signature of a near-random-GIVEN-features target, not a training defect); the
+event-driven accounting fix reconciles to the cent with zero residual lookahead.
+
+**The real root cause is a THIN edge sitting on the transaction-cost boundary.**
+Run 40ff77b9cc42 (concept-2 breaks), net vs slippage (self-verified by
+recomputation from raw fills, commission 0.0035/sh both sides):
+
+| slippage (bps/side) | 0 | 0.5 | 1.0 | 1.5 | 2.0 |
+| ------------------- | - | --- | --- | --- | --- |
+| net USD | +35,832 | +25,229 | +14,627 | +4,024 | **−6,578** |
+
+**Break-even slippage = 1.69 bps/side (concept-2); 1.38 (v3).** The backtest's
+flat 2.0 bps/side assumption is just past break-even — that single arbitrary
+default, not any absence of signal, is what turns the gross edge negative.
+
+Is 2.0 bps/side realistic? Corwin-Schultz (2012) high-low effective spread on
+the 5-min bars (an UPPER bound — 5-min H/L includes intrabar vol, so true quoted
+spreads are tighter): SPY 0.7, QQQ 0.9, IWM 0.9, AAPL 1.3, AMZN 1.5, NFLX 1.4,
+NVDA 2.3, TSLA 2.9 bps/side. So the flat 2.0 is conservative-to-punitive for the
+five liquid names and roughly right only for NVDA/TSLA. A desk with competent
+execution (limit/mid, liquidity provision, smart routing) trades the liquid
+names well under break-even; a retail market order at 2-3 bps does not. **The
+strategy's viability is literally an institutional-execution question.**
+
+Honest caveats recorded WITH the finding (do not oversell):
+- DSR ~0 even at ZERO cost — the gross edge is on heavily-mined 2024-2026
+  development data; the deflator does not certify it. Needs true OOS + live
+  execution measurement before any dollar claim.
+- Per-trade edge is tiny (~0.02 ATR, ~$14-35/trade at low cost) — thin and
+  fragile; a knife-edge on cost is not a robust business.
+- Corwin-Schultz is a proxy; real all-in cost adds impact (small at ~500-sh
+  size on these names) and short borrow (negligible intraday). Verify live.
+Directional consequences: lowering the cost assumption to make P&L positive
+would be "a prettier number by loosening" and is BANNED as tuning. The
+legitimate moves are (1) measure true per-name execution cost and gate trades on
+net-of-REALISTIC-cost EV, and (2) pursue larger, less cost-fragile edges
+(cross-sectional / statistical-relationship strategies) — pre-registered.
+
 ## 2026-07-08 — CORRECTION: entry-vs-exit accounting leak overturns the USD record
 
 A parallel-agent audit (cycle 1 of the self-paced research loop) found a
