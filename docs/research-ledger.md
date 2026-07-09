@@ -5,6 +5,55 @@ what was adopted, what was closed, and what is parked under pre-registration.
 The DSR deflation charges `model.external_trials` (config.yaml) on top of the
 per-fold geometry × threshold search; keep that number in sync with this file.
 
+## 2026-07-08 — FULL AUDIT COMPLETE (56 agents): two honest truths, in tension
+
+The deep audit finished all 8 lenses with adversarial verification (56 agents,
+~4M tokens). It confirms the cost finding I shipped v4 on — AND delivers a
+sobering complement I must record beside it, because it reframes what v4 is.
+
+**Truth 1 — the pipeline is provably clean.** Verified by hand across lenses:
+data faithful (NVDA 10:1 split consistent across timeframes, ratio std <6bp, no
+>3% jumps; only 13/1013 trades touch any missing 1-min bar, all in NFLX, random
+win/loss incidence); labels exact (all 1013 outcomes reproduce by hand; 0 true
+same-bar ties; conservative tie-rule never even contestable); features exact
+(hand-recompute match, 0 NaN/constant, Int8 bug fixed); geometry/exit correct
+(200/200 raw reconstructions match); event-driven sim reconciles to the cent
+with zero residual lookahead. None of the no-net-edge is an artifact.
+
+**Truth 2 — the meta-model has ZERO predictive skill; it is overfit to noise.**
+Hard evidence (independently reproduced by me): TRAIN AUC 1.000 vs HELD-OUT
+0.469-0.501, and held-out AUC is FLAT at chance across the ENTIRE capacity
+range — n_estimators 5→800 (held 0.496–0.507), num_leaves 2→127 (0.493–0.512),
+a depth-1 stump (0.510), logistic regression (0.508), the best single feature
+(0.516). Base rate balanced (0.43–0.49), predictions non-degenerate (855 unique,
+std 0.244), calibration exonerated (isotonic is monotone; raw LGBM held AUC
+0.501). Shipped `walk_forward`: 25 folds, mean test AUC 0.493; Spearman(prob,
+pnl_r)=+0.016 (p=0.62); highest-prob decile mean pnl_r = −0.006 (loses). **The
+target is genuinely near-random given these 23 single-name features. No model
+class or capacity extracts transferable signal — there is nothing to learn
+here.** The raw post-trigger drift is real but ~0.01–0.02 ATR, sitting AT the
+transaction-cost floor (~0.022 ATR); no setup/symbol/regime/hour sub-cell has an
+exploitable net-of-cost edge that survives verification (confirmed_defects = ∅
+after adversarial review — the "2 bps is punitive" defect did NOT survive as a
+clean fixable defect; the lenses genuinely split on whether the thin edge clears
+TRUE cost).
+
+**What this means for v4 (honest reconciliation).** v4's +$15,992 is correct
+arithmetic, but it comes from (a) the per-symbol cost assumption and (b) the
+net-EV gate acting as a COST-VIABILITY filter (drop names/cells whose drift
+can't clear their spread) — NOT from model intelligence, which is nil. v4 is
+"trade the tiny raw drift only where the spread is small enough," a thin,
+execution-dependent edge whose net-of-TRUE-cost sign is genuinely contested by
+the audit. It stays EXPLORATORY; the model layer is not adding value and should
+not be trusted as a predictor.
+
+**Directional consequence.** "Deep ML that decodes the market" CANNOT be built
+on these features/universe — the audit proves they contain no learnable signal.
+Real predictive skill requires NEW INFORMATION the single-name chart features do
+not hold: cross-sectional / statistical-relationship structure (residual
+reversion, lead-lag, ETF-vs-constituents). That is the next build, and it is
+where any genuine institutional edge would live.
+
 ## PRE-REGISTERED: execution-aware net-EV engine (declared 2026-07-08, before the run)
 
 Follows directly from the root-cause audit below. Two changes, both principled,
