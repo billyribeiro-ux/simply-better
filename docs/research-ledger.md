@@ -73,6 +73,56 @@ change; no per-cell hand-tuning. Pre-registered read of the single run:
   fragile; concept-2 closed.
 Design DOF charged: +2 external trials (178 → 180). This is the next loop cycle.
 
+**VERDICT (cycle 2, 2026-07-08): the cost-structure fix does NOT rescue the
+edge — outcome (b), effectively (c). No live spec.** `geometry.net_of_cost`
+implemented (cost in R = 2·(slip·px+comm)/(stop·atr), share count cancels;
+unit-tested to the 6th decimal) and the frozen walk-forward re-run:
+
+| spec (net-of-cost geometry) | trades | expectancy_r | 95% CI | net USD |
+| --------------------------- | ------ | ------------ | ------ | ------- |
+| concept-2 (breaks)  run 183e407e7628 | 638  | +0.0511R | **[−0.026, +0.133]** | −$7,296  |
+| v3 (breaks + ORB)   run 4fab7c16da69 | 1059 | +0.0623R | —                    | −$12,482 |
+
+The geometry did exactly what it was built to do — it abandoned the uniform
+0.2-ATR stop for a 0.3–0.7-ATR spread to cut the friction drag. But the
+decisive fact is the confidence interval: concept-2's edge went from +0.086R
+(CI **excludes** zero) under frictionless geometry to +0.051R with a CI that
+**straddles** zero. Widening the stop to make each trade affordable dilutes the
+per-trade edge until it is statistically indistinguishable from noise, and net
+stays negative (−$7,296, no improvement on the −$6,578 frictionless-geometry
+concept-2). Criterion (a) fails on `net ≤ 0`; the CI-includes-zero result is the
+(c)-flavoured reality: the tight-stop R-edge was fragile.
+
+Honest bottom line after two loop cycles: **on this 8-symbol universe, the
+HOD/LOD break + ORB families do not constitute a net-profitable intraday
+strategy after honest transaction costs.** The prior positive records were an
+accounting artifact (cycle 1); the residual real edge does not survive its own
+costs (cycle 2). `net_of_cost` stays in the codebase (config, default false) as
+a validated capability; no spec adopts it. Setups remain disabled.
+
+## PRE-REGISTERED: cycle 3 — model discrimination + net-EV trade selection (declared 2026-07-08)
+
+Rationale: the meta-model AUC is ~0.511 — it barely separates winners from
+losers, so the decision layer takes essentially the unconditional event stream,
+whose edge is sub-cost (cycles 1-2). The unexplored lever is DISCRIMINATION: if
+the model could identify the SUBSET of triggers whose expected net-of-cost R is
+positive, the strategy could trade only those and be profitable even though the
+unconditional edge is not. Two a-priori changes, no tuning on this range:
+(1) add the point-in-time-safe features the fleet's feature-eng lens proposes
+(re-run that lens under the current model — it died on the session limit);
+(2) replace the fixed probability threshold with a NET-EV GATE: take a trade
+only when `p·(t/s) − (1−p) − cost_R > 0` using the calibrated p and the cell's
+own geometry, so selection is denominated in expected dollars-after-cost, not a
+bare probability. Pre-registered read of the single walk-forward run:
+- (a) net-EV gate yields concept-2 joint net > 0 with expectancy_r CI excluding
+  zero → adopt (v4), forward-EXPLORATORY;
+- (b) net improves toward 0 but stays ≤ 0, or CI still includes zero → the
+  discrimination is insufficient; document and keep benched;
+- (c) no improvement over cycle-2 net → the model carries no exploitable
+  conditional signal on this universe; escalate to a universe/timeframe review.
+DOF charged at the run (feature count + gate = fixed a priori); update
+external_trials then.
+
 ## Trials charged (2026-07 multi-agent research program)
 
 | program            | variants | outcome |

@@ -170,6 +170,30 @@ def _search_cell(cfg: Config, grid: np.ndarray, scans: dict[int, PathScan],
     eod = np.array([scans[i].eod_signed_atr for i in ids])
     n = len(ids)
 
+    # ---- optional net-of-cost objective (pre-registered 2026-07-08) --------
+    # Round-trip cost in R = 2*(slip*px + comm) / (stop_atr * atr): share count
+    # cancels, so the penalty falls as the stop widens — the search then trades
+    # edge for cheapness. Uses only entry price, ATR, and config constants
+    # (slippage_bps, commission_per_share); no lookahead. `cu_over_atr` is the
+    # per-event cost numerator divided by ATR, so mean_cost(s) = mean/ s.
+    cu_over_atr = None
+    if bool(gcfg.get("net_of_cost", False)) and events is not None:
+        ex = cfg.execution
+        slip = float(ex["slippage_bps"]) / 1e4
+        comm = float(ex["commission_per_share"])
+        px = np.array([float(scans[i].entry_px) for i in ids])
+        atr = np.array([float(events[i]["atr"]) for i in ids])
+        atr = np.where(atr > 0, atr, np.nan)
+        cu_over_atr = (2.0 * (slip * px + comm)) / atr   # (n,)
+
+    def mean_cost_r(s: float, mask: np.ndarray | None = None) -> float:
+        if cu_over_atr is None:
+            return 0.0
+        vals = cu_over_atr if mask is None else cu_over_atr[mask]
+        if vals.size == 0:
+            return 0.0
+        return float(np.nanmean(vals) / s)
+
     # candidate levels straight from the observed excursion distributions
     max_adv = np.array([_max_level(adv[k], grid) for k in range(n)])
     max_fav = np.array([_max_level(fav[k], grid) for k in range(n)])
@@ -180,6 +204,7 @@ def _search_cell(cfg: Config, grid: np.ndarray, scans: dict[int, PathScan],
     for s in stop_cands:
         si = int(np.argmin(np.abs(grid - s)))
         a = adv[:, si]
+        cost_s = mean_cost_r(float(s))               # over all events (atr mode)
         for t in tgt_cands:
             if s <= 0 or t <= 0:
                 continue
@@ -191,7 +216,7 @@ def _search_cell(cfg: Config, grid: np.ndarray, scans: dict[int, PathScan],
             p_win = float(win.mean())
             p_stop = float(stopped.mean())
             eod_r = float(np.mean(eod[neither]) / s) if neither.any() else 0.0
-            exp = p_win * (t / s) - p_stop + float(neither.mean()) * eod_r
+            exp = p_win * (t / s) - p_stop + float(neither.mean()) * eod_r - cost_s
             if best is None or exp > best.expectancy_r:
                 best = GeoCell(setup, regime, float(s), float(t),
                                p_win, float(exp), n)
@@ -227,6 +252,7 @@ def _search_cell(cfg: Config, grid: np.ndarray, scans: dict[int, PathScan],
                     payoff = float((t_snap[win] / s).sum())
                     eod_sum = float((eod[neither] / s).sum())
                     exp_trade = (payoff - float(stopped.sum()) + eod_sum) / nt
+                    exp_trade -= mean_cost_r(float(s), traded)   # net of cost
                     score = exp_trade * (nt / n)
                     if score > best.expectancy_r:   # ties keep the simpler atr
                         best = GeoCell(

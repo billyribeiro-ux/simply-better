@@ -247,6 +247,50 @@ class TestPointInTimeAccounting:
 
 
 # ---------------------------------------------------------------------------
+# net-of-cost geometry objective (pre-registered cost-structure experiment).
+# Cost in R = 2*(slip*px + comm) / (stop_atr * atr) is subtracted from the
+# search expectancy; share count cancels, so the penalty falls as the stop
+# widens. This pins the arithmetic exactly on a single-candidate cell.
+# ---------------------------------------------------------------------------
+class TestNetOfCostGeometry:
+    def _one_candidate_cell(self, cfg, net_of_cost: bool):
+        from engine import geometry
+        from engine.labeling import PathScan
+        grid = cfg.scan_grid
+        G = len(grid)
+        # every event: favorable running-max reaches exactly 1.0 ATR (crossed
+        # at bar 1), adverse reaches exactly 0.5 ATR (crossed at bar 5). So the
+        # stop/target candidate sets each collapse to a single value (0.5, 1.0)
+        # and the ONLY difference between runs is the subtracted cost.
+        fav_cross = np.where(grid <= 1.0 + 1e-9, 1, -1).astype(np.int32)
+        adv_cross = np.where(grid <= 0.5 + 1e-9, 5, -1).astype(np.int32)
+        ts = [datetime(2025, 1, 6, 10, 0) + timedelta(minutes=i) for i in range(10)]
+        scans, events = {}, []
+        for eid in range(80):
+            scans[eid] = PathScan(
+                event_id=eid, entry_ts=ts[0], entry_px=100.0,
+                adv_cross=adv_cross.copy(), fav_cross=fav_cross.copy(),
+                eod_signed_atr=0.5, eod_ts=ts[-1], eod_px=100.0, cross_ts=ts)
+            events.append({"setup": "HOD_BREAK", "gk_vol_z": 0.0, "atr": 1.0})
+        raw = dict(cfg.raw)
+        raw["geometry"] = {**raw["geometry"], "net_of_cost": net_of_cost}
+        raw["execution"] = {**raw["execution"],
+                            "slippage_bps": 100.0, "commission_per_share": 0.0035}
+        c2 = type(cfg)(raw=raw, root=cfg.root)
+        geo = geometry.learn(c2, events, scans, list(range(80)))
+        return geo.cells[("HOD_BREAK", 0)]
+
+    def test_cost_is_subtracted_exactly(self, cfg):
+        frictionless = self._one_candidate_cell(cfg, net_of_cost=False)
+        net = self._one_candidate_cell(cfg, net_of_cost=True)
+        # same single candidate (stop 0.5, target 1.0), all winners -> +2.0R
+        assert frictionless.stop_atr == pytest.approx(0.5)
+        assert frictionless.expectancy_r == pytest.approx(2.0, abs=1e-6)
+        # cost = 2*(0.01*100 + 0.0035)/(0.5*1.0) = 4.014
+        assert net.expectancy_r == pytest.approx(2.0 - 4.014, abs=1e-6)
+
+
+# ---------------------------------------------------------------------------
 # day-type trend veto plumbing
 # ---------------------------------------------------------------------------
 def _lod_eff_expected(bars):

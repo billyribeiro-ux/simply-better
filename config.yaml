@@ -65,6 +65,12 @@ entry:
   tick: 0.01
 
 geometry:
+  # net-of-cost objective (cycle-2 experiment, ledger 2026-07-08). When true,
+  # the search subtracts modeled round-trip cost in R, 2*(slip*px+comm)/
+  # (stop*atr), from each candidate's expectancy — pushes toward wider,
+  # cheaper stops. Left OFF: it did not rescue concept-2 to profitability
+  # (the edge's CI straddles zero once stops widen). Kept as a validated tool.
+  net_of_cost: false
   # candidate stop/target levels are taken from these quantiles of the
   # observed MAE / MFE distributions (in ATR units), snapped to the scan grid
   stop_quantiles: [0.55, 0.65, 0.75, 0.85]
