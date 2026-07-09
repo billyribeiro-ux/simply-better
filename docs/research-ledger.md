@@ -5,6 +5,30 @@ what was adopted, what was closed, and what is parked under pre-registration.
 The DSR deflation charges `model.external_trials` (config.yaml) on top of the
 per-fold geometry × threshold search; keep that number in sync with this file.
 
+## 2026-07-09 — v4 FORWARD RECORD BEGINS: first two true OOS sessions
+
+Cache extended through 2026-07-09 (both sessions complete: 78×5-min, 390×1-min
+bars per symbol). These are the first sessions v4 has never seen (adopted on
+data through 2026-07-07).
+
+**What the machine did: sat out both days.** 7/8: 2 HOD_BREAK triggers (NVDA);
+7/9: 6 LOD_BREAK triggers (IWM/QQQ/TSLA/SPY). All skipped — calibrated probs
+0.40–0.45 vs threshold 0.550. Verified NO train/serve skew: the 2026-07 fold
+and the production bundle use the identical shared fit path and produced the
+identical 0.550 threshold (the tail could not certify a grid threshold under
+min_trades=30, so both fell back to the default — consistency by construction;
+an earlier intra-session skew concern was checked and retracted). Walk-forward
+through 7/9 (run 37c897405206) is unchanged: 765 trades, +0.1061R, +$15,992.
+
+Hindsight check of the 4 decided events (recorded for honesty, no action): the
+two 7/8 NVDA longs would have won +1.5R each; the two 7/9 events would have
+lost (−1.0R, −0.31R). The net-EV gate alone would have kept one win and one
+loss (+0.5R net). Sitting out was neither vindicated nor punished — small
+sample noise, as expected. Monthly cadence context: taken counts range 3–51
+per month (2025-11: 3; 2026-04: 3), so two flat sessions is unremarkable.
+Paper record preserved (1 historical trade); no new paper entries. The forward
+clock is now genuinely running.
+
 ## 2026-07-08 — CROSS-SECTIONAL SPIKE: the institutional pivot is also dead intraday
 
 Before building a cross-sectional engine (the direction the audit pointed to), a
