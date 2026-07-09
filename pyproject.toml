@@ -17,6 +17,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# CPU wheel: pip install "torch>=2.6,<2.8" --index-url https://download.pytorch.org/whl/cpu
+dl = ["torch>=2.6,<2.8"]
 
 [dependency-groups]
 dev = ["pytest>=8.0"]

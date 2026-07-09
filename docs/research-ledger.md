@@ -5,6 +5,59 @@ what was adopted, what was closed, and what is parked under pre-registration.
 The DSR deflation charges `model.external_trials` (config.yaml) on top of the
 per-fold geometry × threshold search; keep that number in sync with this file.
 
+## PRE-REGISTERED: MIE-DL — deep sequence model, tops & bottoms (declared 2026-07-09, before any run)
+
+Owner directive: the maximal-intelligence build on the available data. The one
+ML lever no audit has tested: a deep sequence model on RAW 1-min bars with
+cross-symbol context (SPY/QQQ channels), classifying every 5-min decision bar
+as local bottom (LONG) / local top (SHORT) / neither over the next 15 minutes,
+with the class deadband set to each name's MEASURED round-trip cost — a call
+only counts if the move would clear that symbol's cost, by construction.
+
+Honest prior, stated before the run: the hand-feature null (held-out AUC 0.50
+at every capacity) makes net-of-cost skill here UNLIKELY (<25%). The build is
+decisive either way: the gates below make a null clean and quantified, v4
+remains the fallback spec, and the infrastructure persists for richer data.
+
+Spec fixed a priori (no architecture/hyperparameter search): dual-branch causal
+TCN ~96k params (1-min branch: 9 ch x 64 steps, dilations 1..16; 5-min branch:
+6 ch x 48; symbol embedding; 3-class + quantile heads); causal EWMA vol
+normalization (halflife 120, within-session only); decision bars on the 5-min
+grid 10:35-15:30; label H=15min vol-normalized forward return with per-symbol
+cost deadband; declared secondary H=30 run once and reported; AdamW lr 2e-3,
+batch 512, <=15 epochs, early stop on an embargoed session-tail 15% val slice;
+seed 7, byte-identical determinism required by test.
+
+Evaluation: 7 expanding quarterly refits, 2024-01-02 -> 2026-07-09, 5-day
+embargo (compute-justified vs 25 monthly: each 3-month test window holds ~30k
+decisions). Baselines under identical folds: LightGBM on the 23 features (the
+proven null), trailing 30-min momentum (positive-control sanity), v4 record.
+
+Trade rule frozen a priori: score s = p_bottom - p_top; trade when |s| >= s_min
+(per-refit, VAL-ONLY 11-point grid 0.05..0.55, min 100 trades, default 0.20);
+entry next 1-min open; stop = 1.0 vol-unit; target = 1.0 vol-unit; 30-min time
+exit; flat by 15:55; ties against the trade; isotonic p fit on val only;
+net-EV gate via costs.py verbatim; 1 open/symbol, 30-min cooldown, cap 4;
+1 share (owner order).
+
+GATES (evaluated in order; failing an earlier gate forbids touching later ones):
+- **Gate A (skill)**: pooled held-out up-vs-down AUC >= 0.530 AND per-fold
+  AUC > 0.50 in >= 5/7 folds AND pooled rank-IC >= +0.020 with
+  session-clustered t >= 3.0 AND within-session label-shuffle control AUC in
+  [0.48, 0.52] (causality harness must certify the pipeline first).
+- **Gate B (economics; only if A passes; no retuning permitted)**: >= 300 gated
+  trades across the 7 test windows; net expectancy >= +0.05R with a
+  zero-excluding session-clustered bootstrap CI; net USD > 0 at measured
+  per-symbol costs; DL-stream max drawdown <= 25%.
+- **Gate C (no harm)**: joint (v4 + DL) expectancy >= v4-alone - 0.01R.
+Outcomes: A fails -> null recorded with full per-fold tables, dl.enabled stays
+false, v4 stands, infra retained. A passes/B fails -> "skill without
+economics", research-only. All pass -> DL_SEQ enters blotter/live/paper,
+EXPLORATORY until >= 1 month of forward record; DSR will not certify and we
+say so. Trials charged NOW: +15 (2 horizons, 7 val-grid selections, 2
+stability seeds, 4 design DOF) -> external_trials 182 -> 197. Any deviation
+from this spec restarts the clock.
+
 ## 2026-07-09 — OWNER ORDER: flat 1-share sizing (no sizing model)
 
 Owner directive: every trade is exactly ONE share (`execution.fixed_shares: 1`);

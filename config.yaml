@@ -95,8 +95,9 @@ model:
   ensemble_seeds: 3       # seed-bagged LightGBM members, probabilities averaged
   # research trials charged into DSR deflation on top of the geometry x
   # threshold search — full breakdown in docs/research-ledger.md
-  # (148 program + 20 cycle2 + 6 concept-2 + 4 concept-3 + 2 cost-structure DOF)
-  external_trials: 182
+  # (148 program + 20 cycle2 + 6 concept-2 + 4 concept-3 + 2 cost-structure
+  #  + 2 net-EV + 15 MIE-DL design DOF)
+  external_trials: 197
   params:
     num_leaves: 31
     learning_rate: 0.05
@@ -154,3 +155,43 @@ live:
   paper_file: dashboard/static/data/paper.json
   lookback_sessions: 5    # 5-min history fed to the detector (anchors/context)
   poll_seconds: 60
+
+# MIE-DL — deep sequence model, tops & bottoms (pre-registered 2026-07-09,
+# ledger). All constants below are FIXED A PRIORI; changing any of them on
+# this range restarts the multiplicity clock. enabled flips true only if the
+# pre-registered gates A+B+C pass.
+dl:
+  enabled: false
+  seed: 7
+  model_path: data/model/dl_production.pt
+  cache_dir: data/dl            # per-symbol causal feature caches
+  horizon_min: 15               # primary label horizon (secondary 30, run once)
+  seq_1m: 64                    # 1-min branch length
+  seq_5m: 48                    # 5-min branch length
+  ewma_halflife_1m: 120         # causal vol normalization (within-session)
+  ewma_halflife_5m: 24
+  decision:                     # 5-min grid decision bars
+    first: "10:35"              # guarantees 64 within-session 1-min bars
+    last: "15:30"               # label horizon fits before flat_by
+  train:
+    batch: 512
+    max_epochs: 15
+    patience: 3
+    lr: 0.002
+    weight_decay: 0.0001
+    val_frac: 0.15              # session-tail validation slice
+    embargo_days: 5             # purged between train core and val
+    max_train_samples: 250000   # keep most recent if exceeded (budget rule)
+  trade:
+    k_stop: 1.0                 # stop  = 1.0 vol-unit (sigma_t * sqrt(H))
+    k_target: 1.0               # target = 1.0 vol-unit
+    time_exit_min: 30
+    s_min_default: 0.20
+    s_min_grid: {start: 0.05, stop: 0.55, step: 0.05}
+    s_min_min_trades: 100
+    max_concurrent: 4
+    cooldown_min: 30
+  eval:
+    folds: 7                    # expanding quarterly refits, ledger schedule
+    min_train_months: 9
+    test_months: 3
