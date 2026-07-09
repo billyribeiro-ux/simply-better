@@ -13,6 +13,7 @@
 		| 'side'
 		| 'entry'
 		| 'exit'
+		| 'exit_reason'
 		| 'stop'
 		| 'target'
 		| 'prob'
@@ -31,6 +32,7 @@
 		side: (s) => s.side,
 		entry: (s) => s.entry_px,
 		exit: (s) => s.exit_px,
+		exit_reason: (s) => s.exit_reason,
 		stop: (s) => s.stop_px,
 		target: (s) => s.target_px,
 		prob: (s) => s.prob,
@@ -50,6 +52,7 @@
 		{ key: 'side', label: 'side', numeric: false },
 		{ key: 'entry', label: 'entry', numeric: true },
 		{ key: 'exit', label: 'exit', numeric: true },
+		{ key: 'exit_reason', label: 'why', numeric: false },
 		{ key: 'stop', label: 'stop', numeric: true },
 		{ key: 'target', label: 'target', numeric: true },
 		{ key: 'prob', label: 'prob', numeric: true },
@@ -229,6 +232,12 @@
 						<td class:loss={s.side === 'SHORT'} class:gain={s.side === 'LONG'}>{s.side}</td>
 						<td class="r">{fmtTime(s.entry_ts)} <span class="dim">{fmtNum(s.entry_px, 2)}</span></td>
 						<td class="r">{fmtTime(s.exit_ts)} <span class="dim">{fmtNum(s.exit_px, 2)}</span></td>
+						<td
+							class:gain={s.exit_reason === 'target'}
+							class:loss={s.exit_reason === 'stop'}
+							class:dim={s.exit_reason === 'eod'}
+							>{s.exit_reason === 'target' ? 'tgt' : s.exit_reason}</td
+						>
 						<td class="r">{fmtNum(s.stop_px, 2)}</td>
 						<td class="r">{fmtNum(s.target_px, 2)}</td>
 						<td class="r">{fmtNum(s.prob, 3)}</td>
