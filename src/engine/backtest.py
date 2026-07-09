@@ -31,6 +31,7 @@ log = logging.getLogger("engine.backtest")
 def run(cfg: Config, taken: pl.DataFrame) -> tuple[pl.DataFrame, list[date], np.ndarray]:
     ex = cfg.execution
     comm = float(ex["commission_per_share"])
+    fixed_shares = int(ex.get("fixed_shares", 0))   # 0 = risk-based sizing
     risk_pct = float(ex["risk_per_trade_pct"]) / 100.0
     max_conc = int(ex["max_concurrent"])
     max_daily = float(ex.get("max_daily_loss_pct", 0.0)) / 100.0  # 0 = off
@@ -75,8 +76,11 @@ def run(cfg: Config, taken: pl.DataFrame) -> tuple[pl.DataFrame, list[date], np.
         stop_dist = float(r["stop_atr"]) * float(r["atr"])
         if stop_dist <= 0:
             continue
-        risk_usd = equity * risk_pct
-        shares = int(risk_usd // stop_dist)
+        if fixed_shares > 0:
+            shares = fixed_shares          # owner order: flat 1-share trades
+        else:
+            risk_usd = equity * risk_pct
+            shares = int(risk_usd // stop_dist)
         if shares < 1:
             continue
 

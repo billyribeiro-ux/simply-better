@@ -23,6 +23,9 @@ def cfg():
     # config disables the refuted concept)
     for s in ("hod_fade", "lod_reclaim"):
         c.raw["setups"][s]["enabled"] = True
+    # sizing/kill-switch tests exercise the risk-based path; production runs
+    # flat 1-share (owner order) which is pinned by its own test below
+    c.raw["execution"] = {**c.raw["execution"], "fixed_shares": 0}
     return c
 
 
@@ -329,6 +332,31 @@ class TestCostModel:
         # cheap name, same geometry -> survives
         cheap = costs.cost_r(0.00005, comm, 100.0, 0.2, 1.0)
         assert costs.net_ev_r(0.60, 0.2, 0.3, cheap) > 0  # kept
+
+
+# ---------------------------------------------------------------------------
+# flat 1-share sizing (owner order 2026-07-09): every booked trade is exactly
+# one share; dollar P&L is the per-share move net of costs.
+# ---------------------------------------------------------------------------
+class TestFixedShares:
+    def test_every_trade_is_one_share(self, cfg):
+        raw = dict(cfg.raw)
+        raw["execution"] = {**raw["execution"], "fixed_shares": 1}
+        c1 = type(cfg)(raw=raw, root=cfg.root)
+        d = date(2026, 3, 2)
+        taken = pl.DataFrame([{
+            "session_date": d,
+            "entry_ts": datetime(2026, 3, 2, 10, 0),
+            "exit_ts": datetime(2026, 3, 2, 11, 0),
+            "side": 1.0, "stop_atr": 1.0, "atr": 4.0,
+            "entry_px": 100.0, "exit_px": 110.0, "symbol": "AAPL",
+        }])
+        trades, _, _ = backtest.run(c1, taken)
+        assert trades.height == 1
+        assert int(trades["shares"][0]) == 1
+        # $10 move on 1 share minus slippage (1.3bps/side on ~$100+$110)
+        # and 2x commission — just under $10
+        assert 9.5 < float(trades["pnl_usd"][0]) < 10.0
 
 
 # ---------------------------------------------------------------------------

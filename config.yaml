@@ -136,7 +136,11 @@ execution:
     NVDA: 2.3
     TSLA: 2.9
   commission_per_share: 0.0035
-  risk_per_trade_pct: 0.5 # of current equity, constant-risk sizing
+  # owner order 2026-07-09: flat ONE share per trade, no sizing model.
+  # R-based metrics and the net-EV gate are share-independent, so the
+  # statistical record is unchanged; only dollar magnitudes scale.
+  fixed_shares: 1
+  risk_per_trade_pct: 0.5 # retained for reference; unused when fixed_shares set
   max_concurrent: 4
   max_daily_loss_pct: 1.5 # kill switch: no new entries after losing this % in a day
   starting_equity: 100000

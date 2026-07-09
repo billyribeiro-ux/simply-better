@@ -92,6 +92,7 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
     equity = float(ex["starting_equity"])
     risk_usd = equity * float(ex["risk_per_trade_pct"]) / 100.0
     comm = float(ex["commission_per_share"])
+    fixed_shares = int(ex.get("fixed_shares", 0))   # 0 = risk-based sizing
     net_gate = bool(cfg.setups.get("net_ev_gate", False))
 
     today, bars1 = gather_session(cfg, bundle.universe, session_date, now_et)
@@ -161,7 +162,10 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
         stop_dist = stop_atr * atr
         stop_px = entry_ref + side * -1 * stop_atr * atr
         target_px = entry_ref + side * target_atr * atr
-        shares = int(risk_usd // stop_dist) if stop_dist > 0 else 0
+        if fixed_shares > 0:
+            shares = fixed_shares          # owner order: flat 1-share trades
+        else:
+            shares = int(risk_usd // stop_dist) if stop_dist > 0 else 0
 
         signals.append({
             "id": f"{ev['symbol']}-{ev['trigger_ts']:%H%M}",

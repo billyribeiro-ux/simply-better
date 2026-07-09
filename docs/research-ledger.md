@@ -5,6 +5,26 @@ what was adopted, what was closed, and what is parked under pre-registration.
 The DSR deflation charges `model.external_trials` (config.yaml) on top of the
 per-fold geometry × threshold search; keep that number in sync with this file.
 
+## 2026-07-09 — OWNER ORDER: flat 1-share sizing (no sizing model)
+
+Owner directive: every trade is exactly ONE share (`execution.fixed_shares: 1`);
+the risk-based sizing model is retired from the shipping spec. Applied
+identically in backtest and live (shared config), pinned by test.
+
+Plain consequences, recorded without spin (run bfd4f215df78, 2024-01-02 →
+2026-07-09): **778 trades, expectancy +0.0954R (unchanged in kind — R is
+share-independent), net −$20.38.** The identical decision stream that nets
++$15,992 under equal-risk sizing is breakeven-negative at 1 share, because one
+share of each name carries a different dollar stake: per-share dollar risk runs
+from $0.60 (NFLX) to $3.72 (TSLA), so the worst-R name (TSLA, −0.111R avg)
+gets ~6× the dollar weight of the best behaved ones. Per-symbol @1sh: QQQ
++$50.04, AMZN +$24.77, NFLX +$7.51, IWM +$6.79 vs NVDA −$12.14, AAPL −$14.18,
+SPY −$25.11, TSLA −$58.06. Also: at 1 share the daily-loss kill switch can
+never reach 1.5% of equity, so it is inert — 13 previously-suppressed trades
+re-enter (765 → 778). Equity-curve Sharpe becomes noise-dominated at this
+stake. The R-based record and the net-EV gate (both share-independent) remain
+the meaningful statistics.
+
 ## 2026-07-09 — v4 FORWARD RECORD BEGINS: first two true OOS sessions
 
 Cache extended through 2026-07-09 (both sessions complete: 78×5-min, 390×1-min

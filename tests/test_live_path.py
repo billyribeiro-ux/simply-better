@@ -169,6 +169,7 @@ class TestScoringPlumbingParity:
         probs = model.score(bundle.fm, X)
         attribution = Attribution(rules=list(bundle.rules))
         ex = cfg.execution
+        fixed = int(ex.get("fixed_shares", 0))
         risk_usd = float(ex["starting_equity"]) * float(ex["risk_per_trade_pct"]) / 100.0
 
         gate_max = float(cfg.setups.get("day_type", {}).get("eff_gate_max", 1e9))
@@ -183,7 +184,9 @@ class TestScoringPlumbingParity:
             assert sig["trend_veto"] == veto
             assert sig["taken"] == (tradable and float(prob) >= eff and not veto)
             if sig["shares"] and stop_atr * ev["atr"] > 0:
-                assert sig["shares"] == int(risk_usd // (stop_atr * ev["atr"]))
+                # sizing parity: flat fixed_shares (owner order) else risk-based
+                expected = fixed if fixed > 0 else int(risk_usd // (stop_atr * ev["atr"]))
+                assert sig["shares"] == expected
 
 
 class TestBundlePersistence:
@@ -354,10 +357,13 @@ class TestPaperResolution:
         assert r["exit_reason"] == "eod"          # neither barrier ever crossed
         assert r["exit_px"] == pytest.approx(101.80, abs=0.01)
         assert r["pnl_r"] == pytest.approx(0.2, abs=0.01)   # +0.2ATR / 0.5ATR stop
-        # USD: long 500 shares, slippage against both sides + commission
+        # USD: flat 1 share (owner order), slippage against both sides +
+        # commission; "TEST" is unmeasured so the flat 2.0 bps fallback applies
         slip = 2.0 / 1e4
-        expect = (101.80 * (1 - slip) - 101.60 * (1 + slip)) * 500 - 500 * 2 * 0.0035
-        assert r["pnl_usd"] == pytest.approx(expect, abs=0.05)
+        sh = r["shares"]
+        assert sh == 1
+        expect = (101.80 * (1 - slip) - 101.60 * (1 + slip)) * sh - sh * 2 * 0.0035
+        assert r["pnl_usd"] == pytest.approx(expect, abs=0.01)
 
     def test_open_trade_marked_unresolved(self, crafted_env, monkeypatch):
         from engine import paper
