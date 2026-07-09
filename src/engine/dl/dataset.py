@@ -243,7 +243,11 @@ def _hm_to_min(s: str) -> int:
 
 def build_samples(cfg: Config, caches: dict[str, SymbolCache],
                   d_from: date, d_to: date,
-                  horizon_min: int | None = None) -> Samples:
+                  horizon_min: int | None = None,
+                  require_label: bool = True) -> Samples:
+    """require_label=False (live path): decision bars near 'now' whose label
+    horizon has not elapsed are still emitted with y_ret/y_cls = 0 — scoring
+    needs only the input window, never the label."""
     dl = cfg.raw["dl"]
     H = int(horizon_min or dl["horizon_min"])
     L1 = int(dl["seq_1m"])
@@ -286,7 +290,8 @@ def build_samples(cfg: Config, caches: dict[str, SymbolCache],
                 continue
             # label: H later 1-min bars in the SAME session
             j = i + H
-            if j >= n1 or cache.date1[j] != cache.date1[i]:
+            has_label = j < n1 and cache.date1[j] == cache.date1[i]
+            if require_label and not has_label:
                 continue
             sig = cache.sigma1[i]
             if not (np.isfinite(sig) and sig > 0) or not cache.valid1[i]:
@@ -298,11 +303,14 @@ def build_samples(cfg: Config, caches: dict[str, SymbolCache],
                 continue
 
             sig_h = sig * np.sqrt(H)
-            r_fwd = np.log(cache.close1[j] / cache.close1[i])
-            y = r_fwd / sig_h
             c_rt = 2.0 * (slip + comm / cache.close1[i])
             th = c_rt / sig_h
-            cls = 2 if y > th else (0 if y < -th else 1)
+            if has_label:
+                r_fwd = np.log(cache.close1[j] / cache.close1[i])
+                y = r_fwd / sig_h
+                cls = 2 if y > th else (0 if y < -th else 1)
+            else:
+                y, cls = 0.0, 1
 
             wd = int(dts64[i].astype("datetime64[D]").astype(object).weekday())
             cols["sym_id"].append(sid); cols["idx1"].append(i)

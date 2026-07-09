@@ -42,6 +42,16 @@ jobs:
       - name: install engine
         run: pip install -e .
 
+      # MIE-DL: torch (CPU wheel) only when the pre-registered gates have
+      # flipped dl.enabled — keeps the nightly fast until adoption
+      - name: install torch if DL enabled
+        run: |
+          if python -c "import yaml,sys; sys.exit(0 if yaml.safe_load(open('config.yaml')).get('dl',{}).get('enabled') else 1)"; then
+            pip install "torch>=2.6,<2.8" --index-url https://download.pytorch.org/whl/cpu
+          else
+            echo "dl.enabled false — skipping torch"
+          fi
+
       - name: run daily loop
         env:
           FMP_API_KEY: ${{ secrets.FMP_API_KEY }}

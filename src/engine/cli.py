@@ -267,6 +267,24 @@ def daily(
     production.save_bundle(cfg, new_bundle)
     typer.echo(f"retrained through {today}: labeled={new_bundle.n_labeled} "
                f"thr={new_bundle.fm.threshold:.3f} rules={len(new_bundle.rules)}")
+
+    # 3.5 MIE-DL nightly warm-start refit (self-learning) — gates-controlled
+    if bool(cfg.raw.get("dl", {}).get("enabled", False)):
+        try:
+            from pathlib import Path as _P
+
+            from .dl.dataset import build_caches as _bc
+            from .dl.train import DLBundle as _DLB
+            from .dl.train import fit as _dlfit
+            dl_path = cfg.root / cfg.raw["dl"]["model_path"]
+            warm = _DLB.load(_P(dl_path)) if _P(dl_path).exists() else None
+            caches = _bc(cfg)
+            dlb, _ = _dlfit(cfg, caches, start, today, warm_start=warm)
+            dlb.save(_P(dl_path))
+            typer.echo(f"DL warm-start refit through {today} "
+                       f"(val_ce={dlb.meta.get('val_ce')})")
+        except ImportError:
+            typer.echo("dl.enabled but torch missing — skipped DL refit")
     typer.echo("daily loop complete")
 
 

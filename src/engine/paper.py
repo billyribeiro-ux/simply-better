@@ -38,10 +38,15 @@ def resolve_day(cfg: Config, bundle: ProductionBundle, session_date: date,
                 now_et: datetime) -> list[dict]:
     """Resolve the session's taken+confirmed signals to paper trades."""
     report = live.scan_live(cfg, bundle, session_date, now_et)
+    dl_taken = [s for s in report["signals"]
+                if s["taken"] and s["setup"] == "DL_SEQ"]
+    dl_rows = (_resolve_dl(cfg, session_date, now_et, dl_taken,
+                           report["trained_through"]) if dl_taken else [])
     taken = [s for s in report["signals"]
-             if s["taken"] and s["status"] == "confirmed"]
+             if s["taken"] and s["status"] == "confirmed"
+             and s["setup"] != "DL_SEQ"]
     if not taken:
-        return []
+        return dl_rows
 
     today, bars1 = live.gather_session(cfg, bundle.universe, session_date, now_et)
     scans = labeling.scan_paths(cfg, today, bars1)
@@ -92,9 +97,79 @@ def resolve_day(cfg: Config, bundle: ProductionBundle, session_date: date,
             "trained_through": report["trained_through"],
             "resolved_at": datetime.now(timezone.utc).isoformat(),
         })
+    rows.extend(dl_rows)
     log.info("paper %s: %d taken+confirmed, %d resolved",
              session_date, len(rows), sum(1 for r in rows if r["resolved"]))
     return rows
+
+
+def _resolve_dl(cfg: Config, session_date: date, now_et: datetime,
+                dl_taken: list[dict], trained_through: str) -> list[dict]:
+    """Resolve taken DL_SEQ signals with the frozen DL exit rule (walk_path:
+    1 vol-unit stop/target, 30-min time exit, ties against the trade)."""
+    import numpy as np
+
+    from . import costs
+    from .dl.dataset import SYMBOLS_ORDER, build_caches, build_samples
+    from .dl.signals import net_pnl_r, walk_path
+
+    dlc = cfg.raw["dl"]["trade"]
+    k_stop, k_target = float(dlc["k_stop"]), float(dlc["k_target"])
+    comm = float(cfg.execution["commission_per_share"])
+    session_complete = now_et.time() >= time(15, 55)
+    caches = build_caches(cfg)
+    samples = build_samples(cfg, caches, session_date, session_date,
+                            require_label=False)
+    key_to_row: dict[tuple[str, str], int] = {}
+    for j in range(samples.y_cls.size):
+        sym_j = SYMBOLS_ORDER[int(samples.sym_id[j])]
+        ts_j = str(samples.ts[j].astype("datetime64[s]")).replace(" ", "T")
+        key_to_row[(sym_j, ts_j)] = j
+
+    out: list[dict] = []
+    for s in dl_taken:
+        i = key_to_row.get((s["symbol"], s["trigger_ts"]))
+        if i is None:
+            continue
+        cache = caches[s["symbol"]]
+        side = -1.0 if s["side"] == "SHORT" else 1.0
+        unit = float(samples.sigma_h[i]) * float(samples.close[i])
+        o = walk_path(cache, int(samples.idx1[i]), side, unit,
+                      k_stop, k_target, int(dlc["time_exit_min"]))
+        if o is None:
+            continue
+        reason = o.exit_reason
+        if reason in ("eod", "time") and not session_complete:
+            reason = "open"
+        net_r = net_pnl_r(cfg, s["symbol"], o.entry_px, unit,
+                          o.pnl_r_gross, k_stop)
+        slip = costs.slip_frac(cfg, s["symbol"])
+        shares = int(s["shares"])
+        ef = o.entry_px * (1.0 + side * slip)
+        xf = o.exit_px * (1.0 - side * slip)
+        pnl_usd = (side * (xf - ef) - 2.0 * comm) * shares
+        out.append({
+            "session_date": session_date.isoformat(),
+            "signal_id": s["id"],
+            "symbol": s["symbol"], "setup": "DL_SEQ", "side": s["side"],
+            "trigger_ts": s["trigger_ts"],
+            "entry_ts": str(cache.ts1[o.entry_idx].astype("datetime64[s]")).replace(" ", "T"),
+            "entry_px": round(float(o.entry_px), 2),
+            "shares": shares,
+            "stop_px": float(s["stop_px"]), "target_px": float(s["target_px"]),
+            "exit_ts": str((cache.ts1[o.exit_idx] + np.timedelta64(1, "m"))
+                           .astype("datetime64[s]")).replace(" ", "T"),
+            "exit_px": round(float(o.exit_px), 2),
+            "exit_reason": reason,
+            "resolved": reason != "open",
+            "outcome": "WIN" if pnl_usd > 0 else "LOSS",
+            "pnl_r": round(float(net_r), 3),
+            "pnl_usd": round(float(pnl_usd), 2),
+            "prob": s["prob"], "threshold": s["threshold"],
+            "trained_through": trained_through,
+            "resolved_at": datetime.now(timezone.utc).isoformat(),
+        })
+    return out
 
 
 def persist_day(cfg: Config, session_date: date, rows: list[dict]) -> None:

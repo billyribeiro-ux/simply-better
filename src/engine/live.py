@@ -194,6 +194,15 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
             "max_room_atr": round(float(ev["max_room_atr"]), 2),
         })
 
+    # MIE-DL stream (setup DL_SEQ) — only when the pre-registered gates have
+    # flipped dl.enabled; identical schema, appended to the same feed
+    if bool(cfg.raw.get("dl", {}).get("enabled", False)):
+        try:
+            from .dl.signals import scan_live_dl
+            signals.extend(scan_live_dl(cfg, session_date, now_et))
+        except ImportError as exc:
+            log.warning("dl.enabled but torch missing: %s", exc)
+
     report["signals"] = signals
     log.info("live scan %s as of %s: %d triggers, %d taken",
              session_date, now_et.time(), len(signals),

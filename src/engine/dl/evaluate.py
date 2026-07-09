@@ -110,17 +110,18 @@ def _summary_features(cfg: Config, caches, samples: Samples,
     return np.concatenate(xs, axis=0)
 
 
-def _lgbm_baseline(cfg, caches, samples, tr_rows, te_rows) -> dict:
+def _lgbm_baseline(cfg, caches, tr_samples, tr_rows,
+                   te_samples, te_rows) -> dict:
     import lightgbm as lgb
-    Xtr = _summary_features(cfg, caches, samples, tr_rows)
-    Xte = _summary_features(cfg, caches, samples, te_rows)
-    ytr = (samples.y_cls[tr_rows] == 2).astype(int)
-    m = samples.y_cls[tr_rows] != 1
+    Xtr = _summary_features(cfg, caches, tr_samples, tr_rows)
+    Xte = _summary_features(cfg, caches, te_samples, te_rows)
+    ytr = (tr_samples.y_cls[tr_rows] == 2).astype(int)
+    m = tr_samples.y_cls[tr_rows] != 1
     clf = lgb.LGBMClassifier(n_estimators=300, num_leaves=31,
                              learning_rate=0.05, random_state=7, verbose=-1)
     clf.fit(Xtr[m], ytr[m])
     s = clf.predict_proba(Xte)[:, 1]
-    return _fold_metrics(samples, te_rows, s)
+    return _fold_metrics(te_samples, te_rows, s)
 
 
 def _momentum_baseline(cfg, caches, samples, te_rows) -> dict:
@@ -172,10 +173,14 @@ def run_eval(cfg: Config, *, horizon_min: int | None = None,
                     "val_ce": bundle.meta.get("val_ce"),
                     "wallclock_min": round((time.time() - t0) / 60, 1)})
         # baselines on identical rows
-        tr_samples_b = build_samples(cfg, caches, TRAIN_START, d_to, horizon_min=H)
-        met["baseline_lgbm"] = _lgbm_baseline(
-            cfg, caches, te_samples,
-            np.arange(tr_samples_b.y_cls.size), rows) if fi in (1, 4, 7) else None
+        if fi in (1, 4, 7):
+            tr_samples_b = build_samples(cfg, caches, TRAIN_START, d_to,
+                                         horizon_min=H)
+            met["baseline_lgbm"] = _lgbm_baseline(
+                cfg, caches, tr_samples_b,
+                np.arange(tr_samples_b.y_cls.size), te_samples, rows)
+        else:
+            met["baseline_lgbm"] = None
         met["baseline_momentum"] = _momentum_baseline(cfg, caches, te_samples, rows)
         folds_out.append(met)
         log.info("fold %d metrics: %s", fi, {k: met[k] for k in

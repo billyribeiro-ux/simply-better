@@ -142,6 +142,75 @@ def fit_calibrator_and_smin(cfg: Config, caches: dict[str, SymbolCache],
     return calibrator, best
 
 
+def scan_live_dl(cfg: Config, session_date: date, now_et: datetime) -> list[dict]:
+    """Live DL signals for one session in the live.json schema (setup DL_SEQ).
+    Scores only decision bars whose input window is complete at now_et; new
+    entries stop at session.no_new_after (mirrors the v4 window hygiene)."""
+    from .dataset import build_caches, build_samples
+    from .train import DLBundle, model_from_bundle, predict_scores
+
+    dl = cfg.raw["dl"]
+    path = cfg.root / dl["model_path"]
+    if not path.exists():
+        return []
+    bundle = DLBundle.load(path)
+    model = model_from_bundle(cfg, bundle)
+    caches = build_caches(cfg)
+    samples = build_samples(cfg, caches, session_date, session_date,
+                            require_label=False)
+    if samples.y_cls.size == 0:
+        return []
+    now64 = np.datetime64(now_et, "us")
+    hh, mm = cfg.session.get("no_new_after", "14:50").split(":")
+    cutoff_min = int(hh) * 60 + int(mm)
+    mins = ((samples.ts.astype("datetime64[m]")
+             - samples.ts.astype("datetime64[D]")).astype(int))
+    rows = np.where((samples.ts <= now64) & (mins <= cutoff_min))[0]
+    if rows.size == 0:
+        return []
+    scores = predict_scores(cfg, model, caches, samples, rows)
+
+    tdl = dl["trade"]
+    k_stop, k_target = float(tdl["k_stop"]), float(tdl["k_target"])
+    comm = float(cfg.execution["commission_per_share"])
+    fixed_shares = int(cfg.execution.get("fixed_shares", 1)) or 1
+    out = []
+    for i, r in enumerate(rows):
+        s = float(scores[i])
+        if abs(s) < float(bundle.s_min):
+            continue
+        side = 1.0 if s > 0 else -1.0
+        sym = SYMBOLS_ORDER[int(samples.sym_id[r])]
+        p_cal = (float(bundle.calibrator.predict([abs(s)])[0])
+                 if bundle.calibrator is not None else 0.5)
+        unit = float(samples.sigma_h[r]) * float(samples.close[r])
+        cost = costs.cost_r(costs.slip_frac(cfg, sym), comm,
+                            float(samples.close[r]), k_stop, unit)
+        ev = costs.net_ev_r(p_cal, k_stop, k_target, cost)
+        entry_ref = float(samples.close[r])           # next 1-min open proxy
+        out.append({
+            "id": f"DL-{sym}-{str(samples.ts[r].astype('datetime64[m]'))[-5:]}",
+            "symbol": sym, "setup": "DL_SEQ",
+            "side": "LONG" if side > 0 else "SHORT",
+            "trigger_ts": str(samples.ts[r].astype("datetime64[s]")).replace(" ", "T"),
+            "prob": round(p_cal, 3),
+            "threshold": round(float(bundle.s_min), 3),
+            "taken": bool(ev > 0),
+            "tradable": True, "trend_veto": False, "day_type_eff": 0.0,
+            "anchor": "vol_unit", "frac": 0.0,
+            "stop_atr": k_stop, "target_atr": k_target,
+            "entry_trigger_px": round(entry_ref, 2),
+            "stop_px": round(entry_ref - side * k_stop * unit, 2),
+            "target_px": round(entry_ref + side * k_target * unit, 2),
+            "shares": fixed_shares,
+            "net_ev_r": round(float(ev), 4),
+            "status": "awaiting",
+            "entry_ts": None, "entry_px": None,
+            "max_room_atr": 0.0,
+        })
+    return out
+
+
 def build_trade_rows(cfg: Config, caches: dict[str, SymbolCache],
                      samples: Samples, rows: np.ndarray, scores: np.ndarray,
                      bundle, *, fold: str) -> list[dict]:
