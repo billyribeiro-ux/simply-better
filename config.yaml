@@ -50,14 +50,15 @@ setups:
     ext_min_atr: 0.35
     body_frac_min: 0.5
     eff_min: 0.30
-  # concept 3 — opening range breakout. Re-enabled 2026-07-08 by owner order
-  # for the audit. Honest standing: joint net −$27,523 (run 016e5fae102e);
-  # the audit is establishing the root cause of the no-net-edge result.
+  # concept 3 — opening range breakout. REMOVED 2026-07-08 by owner call: ORB
+  # is a crowded retail pattern, not an institutional edge, and the evidence
+  # agreed — ORB_UP -$32,148, ORB_DOWN -$254 (run 58a9b85dbf1d), the worst
+  # performers in the book. Disabled for good; not a research-bench item.
   orb_up:
-    enabled: true
+    enabled: false
     or_minutes: 30        # opening range = bars closing <= 10:00
   orb_down:
-    enabled: true
+    enabled: false
     or_minutes: 30
 
 entry:
