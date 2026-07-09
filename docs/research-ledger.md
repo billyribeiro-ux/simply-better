@@ -5,6 +5,69 @@ what was adopted, what was closed, and what is parked under pre-registration.
 The DSR deflation charges `model.external_trials` (config.yaml) on top of the
 per-fold geometry × threshold search; keep that number in sync with this file.
 
+## PRE-REGISTERED: execution-aware net-EV engine (declared 2026-07-08, before the run)
+
+Follows directly from the root-cause audit below. Two changes, both principled,
+neither tuned to P&L:
+1. **Per-symbol measured slippage** (`execution.slippage_bps_by_symbol`) from
+   Corwin-Schultz effective half-spread — replaces the arbitrary flat 2.0 bps
+   that sat just past the 1.69 bps/side break-even. A conservative UPPER bound
+   (CS over-states true spread); measurement, not search.
+2. **Net-of-cost EV gate** (`setups.net_ev_gate`): take a trade only when
+   `p*(target/stop) - (1-p) - cost_R(symbol) > 0`. This structurally drops
+   trades whose edge cannot clear their own name's execution cost — it does not
+   rely on the weak model prob being informative. Applied identically in
+   `learn.run_research` and `live.scan_live` via `engine/costs.py` (zero skew).
+ORB removed; this runs on the concept-2 break family only. Design DOF: +2
+(gate on/off, cost-source choice) → external_trials 180 → 182.
+
+Pre-registered read of the single walk-forward run (concept-2 breaks,
+2024-01-02..2026-07-07, embargoed):
+- (a) net > 0 AND expectancy_r 95% CI excludes zero → adopt as the shipping
+  spec (v4), forward-EXPLORATORY; re-enable the live feed;
+- (b) net > 0 but the CI includes zero → real improvement, not yet certified;
+  keep on the bench, no live promotion;
+- (c) net still ≤ 0 → the execution reframe does not rescue it; the edge is
+  genuinely below realistic cost on this universe, escalate to bigger
+  (cross-sectional) edges.
+DSR is expected to remain ~0 on this mined range regardless; forward data is
+the only certification. No parameter is tuned on this range in either outcome.
+
+**VERDICT (run eb131faba92b): outcome (a) — v4 adopted, EXPLORATORY.** Concept-2
+breaks, per-symbol cost + net-EV gate: **765 trades, +0.1061R, 95% CI
+[+0.021, +0.194], net +$15,992, Sharpe 0.717, PSR 0.79.** First configuration
+in the whole program with positive net AND a zero-excluding expectancy CI AND
+positive Sharpe.
+
+Honest decomposition (this is the important part — most of the swing is the
+cost assumption, not new alpha):
+
+| config (concept-2 breaks) | trades | expectancy_r | net USD |
+| ------------------------- | ------ | ------------ | ------- |
+| flat 2.0 bps, no gate (baseline) | 1013 | +0.0862R | −$6,578 |
+| per-symbol cost, no gate         | 1013 | +0.0862R | +$11,920 |
+| per-symbol cost + net-EV gate (v4)| 765 | +0.1061R | +$15,992 |
+
+So **+$18.5k of the ~$22.6k swing to profit is the per-symbol cost measurement**
+(same 1013 trades; frictionless R is unchanged, only the USD cost differs), and
+**~$4k plus the risk-profile improvement is the net-EV gate** (expectancy
++0.086→+0.106R, CI moves to exclude zero, Sharpe −0.17→+0.72, 248 negative-EV
+trades cut). The gate is the genuinely-new selection logic; the cost change is
+a more-honest measurement replacing an arbitrary default.
+
+Caveats carried into adoption, non-negotiable:
+- **The result hinges on the execution-cost assumption.** Corwin-Schultz is a
+  conservative proxy, but the ONLY real proof is measured live fills. Until
+  then this is a hypothesis with strong support, not a booked edge.
+- **DSR = 0.0006** — the deflator still does not certify after this much mining.
+  Development-data result; forward paper record is the certification device.
+- **Edge is concentrated**: QQQ +$16.6k, AMZN +$10.0k, NFLX +$6.3k carry it;
+  AAPL −$8.5k and TSLA −$7.7k still lose (the gate thins but does not clear the
+  wide-spread names). Not broad, not robust yet.
+Adoption means v4 becomes the forward-EXPLORATORY shipping spec and the live
+feed re-enables; it does NOT mean certified-profitable. The frozen-spec forward
+clock restarts at v4.
+
 ## 2026-07-08 — ROOT-CAUSE AUDIT: the edge is real but thin and execution-bound
 
 Owner ordered a deep end-to-end audit. 8 independent lenses (data, labels,

@@ -24,7 +24,7 @@ import duckdb
 import numpy as np
 import polars as pl
 
-from . import labeling, model, setups
+from . import costs, labeling, model, setups
 from .attribution import Attribution
 from .config import Config
 from .data import FMPClient, Store, _duck_type
@@ -91,6 +91,8 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
     ex = cfg.execution
     equity = float(ex["starting_equity"])
     risk_usd = equity * float(ex["risk_per_trade_pct"]) / 100.0
+    comm = float(ex["commission_per_share"])
+    net_gate = bool(cfg.setups.get("net_ev_gate", False))
 
     today, bars1 = gather_session(cfg, bundle.universe, session_date, now_et)
 
@@ -135,6 +137,15 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
         # planned entry = the 1-min break level (stop-market order price)
         brk = (float(ev["trigger_low"]) - tick if side < 0
                else float(ev["trigger_high"]) + tick)
+        # net-of-cost EV gate, identical to the research decide loop. Uses the
+        # confirmed fill when available else the planned break level.
+        ev_px = float(scans[j].entry_px) if scans.get(j) is not None else brk
+        net_ev = costs.net_ev_r(
+            prob, float(stop_atr), float(target_atr),
+            costs.cost_r(costs.slip_frac(cfg, ev["symbol"]), comm, ev_px,
+                         float(stop_atr), float(atr)))
+        if net_gate:
+            taken = taken and net_ev > 0.0
         scan = scans.get(j)
         if scan is not None:
             status, entry_ts, entry_px = "confirmed", scan.entry_ts, scan.entry_px
@@ -172,6 +183,7 @@ def scan_live(cfg: Config, bundle: ProductionBundle, session_date: date,
             "stop_px": round(float(stop_px), 2),
             "target_px": round(float(target_px), 2),
             "shares": shares,
+            "net_ev_r": round(float(net_ev), 4),
             "status": status,
             "entry_ts": entry_ts.isoformat() if entry_ts is not None else None,
             "entry_px": round(float(entry_px), 2) if entry_px is not None else None,

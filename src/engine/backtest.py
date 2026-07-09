@@ -22,6 +22,7 @@ from datetime import date
 import numpy as np
 import polars as pl
 
+from . import costs
 from .config import Config
 
 log = logging.getLogger("engine.backtest")
@@ -29,7 +30,6 @@ log = logging.getLogger("engine.backtest")
 
 def run(cfg: Config, taken: pl.DataFrame) -> tuple[pl.DataFrame, list[date], np.ndarray]:
     ex = cfg.execution
-    slip = float(ex["slippage_bps"]) / 1e4
     comm = float(ex["commission_per_share"])
     risk_pct = float(ex["risk_per_trade_pct"]) / 100.0
     max_conc = int(ex["max_concurrent"])
@@ -81,7 +81,9 @@ def run(cfg: Config, taken: pl.DataFrame) -> tuple[pl.DataFrame, list[date], np.
             continue
 
         # slippage charged AGAINST the trade (invariant 7): longs enter
-        # higher / exit lower, shorts enter lower / exit higher
+        # higher / exit lower, shorts enter lower / exit higher. Per-symbol
+        # measured spread (costs.slip_frac) — the flat default is a fallback.
+        slip = costs.slip_frac(cfg, r.get("symbol", ""))
         entry_fill = float(r["entry_px"]) * (1.0 + side * slip)
         exit_fill = float(r["exit_px"]) * (1.0 - side * slip)
         gross = side * (exit_fill - entry_fill) * shares

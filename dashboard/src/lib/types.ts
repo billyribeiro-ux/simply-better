@@ -106,6 +106,7 @@ export interface Signal {
 	threshold: number;
 	taken: boolean;
 	outcome: 'WIN' | 'LOSS';
+	net_ev_r?: number; // expected value in R net of that name's execution cost
 	pnl_r: number;
 	pnl_usd: number | null;
 	shares: number | null;

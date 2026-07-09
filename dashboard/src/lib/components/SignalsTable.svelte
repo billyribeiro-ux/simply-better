@@ -20,6 +20,7 @@
 		| 'threshold'
 		| 'taken'
 		| 'outcome'
+		| 'net_ev'
 		| 'pnl_r'
 		| 'pnl_usd'
 		| 'mae_r'
@@ -39,6 +40,7 @@
 		threshold: (s) => s.threshold,
 		taken: (s) => s.taken,
 		outcome: (s) => s.outcome,
+		net_ev: (s) => s.net_ev_r ?? null,
 		pnl_r: (s) => s.pnl_r,
 		pnl_usd: (s) => s.pnl_usd,
 		mae_r: (s) => s.mae_r,
@@ -59,6 +61,7 @@
 		{ key: 'threshold', label: 'thr', numeric: true },
 		{ key: 'taken', label: 'taken', numeric: false },
 		{ key: 'outcome', label: 'outcome', numeric: false },
+		{ key: 'net_ev', label: 'net EV', numeric: true },
 		{ key: 'pnl_r', label: 'P&L R', numeric: true },
 		{ key: 'pnl_usd', label: 'P&L $', numeric: true },
 		{ key: 'mae_r', label: 'MAE', numeric: true },
@@ -244,6 +247,12 @@
 						<td class="r dim">{fmtNum(s.threshold, 3)}</td>
 						<td>{s.taken ? 'yes' : 'no'}</td>
 						<td class:gain={s.outcome === 'WIN'} class:loss={s.outcome === 'LOSS'}>{s.outcome}</td>
+						<td
+							class="r"
+							class:gain={(s.net_ev_r ?? 0) > 0}
+							class:loss={(s.net_ev_r ?? 0) < 0}
+							>{s.net_ev_r === undefined ? '—' : fmtR(s.net_ev_r)}</td
+						>
 						<td class="r" class:gain={s.pnl_r > 0} class:loss={s.pnl_r < 0}>{fmtR(s.pnl_r)}</td>
 						<td class="r" class:gain={(s.pnl_usd ?? 0) > 0} class:loss={(s.pnl_usd ?? 0) < 0}>
 							{s.pnl_usd === null ? '—' : fmtUsd(s.pnl_usd, 0, true)}

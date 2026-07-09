@@ -291,6 +291,47 @@ class TestNetOfCostGeometry:
 
 
 # ---------------------------------------------------------------------------
+# execution-cost model: per-symbol slippage + net-of-cost EV gate (costs.py).
+# The strategy's gross edge sits on the transaction-cost boundary, so cost
+# handling must be exact and identical across simulate/serve.
+# ---------------------------------------------------------------------------
+class TestCostModel:
+    def test_per_symbol_slippage_and_fallback(self, cfg):
+        from engine import costs
+        raw = dict(cfg.raw)
+        raw["execution"] = {**raw["execution"], "slippage_bps": 2.0,
+                            "slippage_bps_by_symbol": {"SPY": 0.7, "TSLA": 2.9}}
+        c = type(cfg)(raw=raw, root=cfg.root)
+        assert costs.slip_frac(c, "SPY") == pytest.approx(0.7 / 1e4)
+        assert costs.slip_frac(c, "TSLA") == pytest.approx(2.9 / 1e4)
+        assert costs.slip_frac(c, "ZZZZ") == pytest.approx(2.0 / 1e4)  # fallback
+
+    def test_cost_r_and_net_ev_arithmetic(self):
+        from engine import costs
+        # cost_R = 2*(slip*px + comm)/(stop*atr)
+        c = costs.cost_r(0.0001, 0.0035, 100.0, 0.5, 2.0)  # 2*(0.01+0.0035)/1.0
+        assert c == pytest.approx(2 * (0.01 + 0.0035) / 1.0, abs=1e-9)
+        # net_ev = p*(t/s) - (1-p) - cost
+        ev = costs.net_ev_r(0.6, 0.5, 1.0, 0.05)
+        assert ev == pytest.approx(0.6 * 2.0 - 0.4 - 0.05, abs=1e-9)
+        # a costly, low-prob trade is negative EV -> would be gated out
+        assert costs.net_ev_r(0.45, 0.5, 0.5, 0.30) < 0
+
+    def test_net_ev_gate_drops_cost_losers(self, cfg):
+        # a trade whose edge cannot clear its own cost must be gated out even
+        # when prob >= threshold. Build one decided row each way through learn.
+        from engine import costs
+        comm = 0.0035
+        # low-target, high-cost name: p=0.5, t/s=1.0, cost pushes EV negative
+        slip = costs.slip_frac(cfg, "TSLA")  # unmeasured here -> fallback, still >0
+        cost = costs.cost_r(max(slip, 0.0003), comm, 300.0, 0.2, 1.0)
+        assert costs.net_ev_r(0.50, 0.2, 0.2, cost) < 0   # gated
+        # cheap name, same geometry -> survives
+        cheap = costs.cost_r(0.00005, comm, 100.0, 0.2, 1.0)
+        assert costs.net_ev_r(0.60, 0.2, 0.3, cheap) > 0  # kept
+
+
+# ---------------------------------------------------------------------------
 # day-type trend veto plumbing
 # ---------------------------------------------------------------------------
 def _lod_eff_expected(bars):

@@ -26,7 +26,7 @@ import numpy as np
 import polars as pl
 
 from . import attribution as attr
-from . import backtest, geometry, labeling, metrics, model, setups
+from . import backtest, costs, geometry, labeling, metrics, model, setups
 from .anchors import ROOM_FEATURE
 from .config import Config
 from .data import Store
@@ -144,12 +144,25 @@ def run_research(cfg: Config, d_from: date, d_to: date) -> ResearchState:
         # plus the day-type trend veto (frozen config, applied identically in
         # live.scan_live — an execution-time gate, never a detection filter)
         gate_max = float(cfg.setups.get("day_type", {}).get("eff_gate_max", 1e9))
+        comm = float(cfg.execution["commission_per_share"])
+        net_gate = bool(cfg.setups.get("net_ev_gate", False))
         take_rows = []
         for row in fr.test.iter_rows(named=True):
             eff = attribution.effective_threshold(row, fr.threshold, fold_m)
             row["threshold"] = eff
             trend_veto = float(row.get("dt_eff_h1_aligned", 0.0)) > gate_max
-            row["taken"] = bool(row["prob"] >= eff and not trend_veto)
+            # net-of-cost expected value in R (per-symbol measured slippage).
+            # Recorded on every row; only GATES on it when net_ev_gate is on.
+            slip = costs.slip_frac(cfg, row["symbol"])
+            c = costs.cost_r(slip, comm, float(row["entry_px"]),
+                             float(row["stop_atr"]), float(row["atr"]))
+            ev = costs.net_ev_r(float(row["prob"]), float(row["stop_atr"]),
+                                float(row["target_atr"]), c)
+            row["net_ev_r"] = round(float(ev), 4)
+            taken = bool(row["prob"] >= eff and not trend_veto)
+            if net_gate:
+                taken = taken and ev > 0.0
+            row["taken"] = taken
             take_rows.append(row)
         fold_df = pl.DataFrame(take_rows)
         taken_frames.append(fold_df)
@@ -324,6 +337,7 @@ def _signals_json(decided: pl.DataFrame, trades: pl.DataFrame) -> list[dict]:
             "threshold": round(float(r["threshold"]), 3),
             "taken": bool(r["taken"]),
             "outcome": "WIN" if r["outcome"] == 1 else "LOSS",
+            "net_ev_r": round(float(r.get("net_ev_r", 0.0)), 3),
             "pnl_r": round(float(r["pnl_r"]), 2),
             "pnl_usd": pnl_map.get(r["event_id"]),
             "shares": shares_map.get(r["event_id"]),
