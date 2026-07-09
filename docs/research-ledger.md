@@ -5,6 +5,40 @@ what was adopted, what was closed, and what is parked under pre-registration.
 The DSR deflation charges `model.external_trials` (config.yaml) on top of the
 per-fold geometry × threshold search; keep that number in sync with this file.
 
+## 2026-07-08 — CROSS-SECTIONAL SPIKE: the institutional pivot is also dead intraday
+
+Before building a cross-sectional engine (the direction the audit pointed to), a
+no-lookahead research spike (`research/statarb_spike.py`) tested whether the
+institutional statistical-relationship strategies have an intraday edge on this
+universe. Betas/vols estimated on TRAILING sessions only; ~200k observations.
+
+- **Residual mean-reversion** (Avellaneda-Lee: 2-factor SPY/QQQ residual s-score,
+  fade extremes): Spearman(s-score, forward residual) = **+0.001 to +0.006
+  across ALL horizons (5–120 min)** — near-zero and slightly POSITIVE (a whisper
+  of momentum, the opposite of reversion). The decile pattern has no reversion
+  shape. The fade strategy loses **−0.5 bps/trade GROSS** (before any cost),
+  −8.5 bps net. Residuals do not revert intraday on these names.
+- **Lead-lag** (index[t] → name[t+1]): Spearman −0.006 to −0.025 — this is the
+  5-min bid-ask bounce (slight negative autocorrelation), not a tradeable lead;
+  uncapturable net of spread.
+- **Basket-vs-QQQ divergence** (5-name equal-weight basket vs QQQ): Spearman
+  −0.0078, **p=0.11 — not significant**. No basket reversion.
+
+**Verdict: the cross-sectional family has no exploitable intraday edge here
+either.** Combined with the breakout family (no net edge), the ML feature fleet
+(0/16 survived), and the model-training lens (target near-random, held-out AUC
+0.50 flat across all capacity), the evidence is now consistent and overwhelming:
+**on these 8 ultra-liquid mega-caps/ETFs at 5-min resolution, the intraday
+cross-sectional and single-name signal is efficiently priced — there is no
+edge to decode at this scale/universe.** This is not an engineering failure; it
+is the empirical reality of efficient markets for liquid instruments intraday.
+A real edge would require a different regime: higher frequency (sub-second /
+order-book microstructure), alternative data (options flow, news), a less-liquid
+universe, or a longer (multi-day) horizon — none available in this data. v4
+(execution-aware net-EV) remains the only positive configuration and it is thin,
+cost-dependent, and model-less. Recorded honestly; the spike saved the cost of
+building an engine around a non-edge.
+
 ## 2026-07-08 — FULL AUDIT COMPLETE (56 agents): two honest truths, in tension
 
 The deep audit finished all 8 lenses with adversarial verification (56 agents,
