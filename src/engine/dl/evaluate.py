@@ -300,6 +300,17 @@ def write_artifacts(cfg: Config, result: dict, trade_rows: list[dict],
     rep = Path("reports"); rep.mkdir(exist_ok=True)
     with open(rep / f"dl_eval_{run_id}.json", "w") as fh:
         json.dump(result, fh, indent=2, default=str)
+    # the ML's full blotter — every decision with entry/stop/target/exit —
+    # persisted for chart comparison (JSON + CSV)
+    with open(rep / f"dl_signals_{run_id}.json", "w") as fh:
+        json.dump(trade_rows, fh, indent=2, default=str)
+    if trade_rows:
+        import csv
+        keys = list(trade_rows[0].keys())
+        with open(rep / f"dl_signals_{run_id}.csv", "w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=keys)
+            w.writeheader()
+            w.writerows(trade_rows)
     out = cfg.export_dir / "dl_eval.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w") as fh:
