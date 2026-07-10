@@ -3,11 +3,13 @@
 		Attribution,
 		Equity,
 		GeometryFile,
+		InsightsFile,
 		LiveFile,
 		PaperFile,
 		SignalsFile,
 		Summary
 	} from '$lib/types';
+	import InsightsPanel from '$lib/components/InsightsPanel.svelte';
 	import AnchorRecoveryPanel from '$lib/components/AnchorRecoveryPanel.svelte';
 	import AttributionPanel from '$lib/components/AttributionPanel.svelte';
 	import DiagnosticsPanel from '$lib/components/DiagnosticsPanel.svelte';
@@ -36,6 +38,7 @@
 	let view = $state<View>({ status: 'loading' });
 	let liveFile = $state<LiveFile | null>(null);
 	let paperFile = $state<PaperFile | null>(null);
+	let insightsFile = $state<InsightsFile | null>(null);
 
 	async function fetchJson<T>(path: string): Promise<T> {
 		const res = await fetch(path);
@@ -75,6 +78,12 @@
 			} catch {
 				if (!cancelled) paperFile = null;
 			}
+			try {
+				const inf = await fetchJson<InsightsFile>('/data/market_insights.json');
+				if (!cancelled) insightsFile = inf;
+			} catch {
+				if (!cancelled) insightsFile = null;
+			}
 		})();
 		return () => {
 			cancelled = true;
@@ -112,6 +121,10 @@
 
 		{#if paperFile}
 			<PaperTrackPanel paper={paperFile} />
+		{/if}
+
+		{#if insightsFile && insightsFile.facts.length}
+			<InsightsPanel insights={insightsFile} />
 		{/if}
 
 		<div class="shell">

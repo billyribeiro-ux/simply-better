@@ -269,14 +269,23 @@ def daily(
     typer.echo(f"retrained through {today}: labeled={new_bundle.n_labeled} "
                f"thr={new_bundle.fm.threshold:.3f} rules={len(new_bundle.rules)}")
 
-    # 3.4 nightly self-diagnosis: the machine re-measures its market's
-    # predictability bounds on the fresh tape and publishes them
+    # 3.4 nightly self-diagnosis + insight discovery: the machine re-measures
+    # its market's predictability bounds AND re-derives its plain-English
+    # fact base on the fresh tape
     try:
         from . import diagnose as diag_mod
         diag_mod.write(cfg, diag_mod.run(cfg))
         typer.echo("market self-diagnosis refreshed")
     except Exception as exc:                      # never block the loop
         typer.echo(f"self-diagnosis skipped: {exc}")
+    try:
+        from . import discover as disc_mod
+        insights = disc_mod.run(cfg)
+        disc_mod.write(cfg, insights)
+        typer.echo(f"insight discovery refreshed "
+                   f"({insights['facts_confirmed']} confirmed facts)")
+    except Exception as exc:
+        typer.echo(f"insight discovery skipped: {exc}")
 
     # 3.5 MIE-DL nightly warm-start refit (self-learning) — gates-controlled
     if bool(cfg.raw.get("dl", {}).get("enabled", False)):
@@ -311,6 +320,24 @@ def run_all(
     artifacts = run_pipeline(cfg, a, b)
     export_mod.write(cfg, artifacts)
     typer.echo("done")
+
+
+@app.command()
+def discover(
+    config: str = typer.Option("config.yaml", "--config"),
+) -> None:
+    """Autonomous insight discovery: the machine enumerates, tests, FDR-
+    polices, and out-of-sample-confirms market facts, in plain English."""
+    from . import discover as disc_mod
+    cfg = load_config(config)
+    insights = disc_mod.run(cfg)
+    path = disc_mod.write(cfg, insights)
+    typer.echo(f"{insights['facts_confirmed']} confirmed facts "
+               f"(of {insights['hypotheses_tested']} tested) -> {path}")
+    for f in insights["facts"][:20]:
+        typer.echo(f"  - {f['statement']}  "
+                   f"[confirmed {f['confirmed_pct']}% on {f['confirmed_n']} "
+                   f"unseen cases]")
 
 
 @app.command()

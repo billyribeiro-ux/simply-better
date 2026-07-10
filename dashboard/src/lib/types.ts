@@ -210,6 +210,28 @@ export interface PaperTrade {
 	resolved_at: string;
 }
 
+// /data/market_insights.json — the machine's self-discovered fact base;
+// absent until the first `mie discover` / nightly loop run
+export interface InsightsFile {
+	generated_at: string;
+	sessions: number;
+	hypotheses_tested: number;
+	facts_confirmed: number;
+	method: string;
+	facts: InsightFact[];
+}
+
+export interface InsightFact {
+	statement: string;
+	symbol: string;
+	condition: string;
+	family: string;
+	discovered_pct: number;
+	discovered_n: number;
+	confirmed_pct: number;
+	confirmed_n: number;
+}
+
 // /data/attribution.json
 export interface Attribution {
 	rules: AdjustmentRule[];

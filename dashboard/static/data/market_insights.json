@@ -1,0 +1,1539 @@
+{
+  "generated_at": "2026-07-10T13:18:11.677158+00:00",
+  "sessions": 4997,
+  "hypotheses_tested": 194,
+  "facts_confirmed": 153,
+  "method": "discover on first 70% of sessions, confirm on held-out 30%, Benjamini-Hochberg FDR q=0.05",
+  "facts": [
+    {
+      "statement": "When AMZN touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 2% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 15.5,
+      "discovered_n": 71,
+      "confirmed_pct": 2.5,
+      "confirmed_n": 40
+    },
+    {
+      "statement": "When SPY touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 5% of the time (daily uptrend (above 20-day average))",
+      "symbol": "SPY",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 10.6,
+      "discovered_n": 188,
+      "confirmed_pct": 4.6,
+      "confirmed_n": 65
+    },
+    {
+      "statement": "When QQQ touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 5% of the time (daily uptrend (above 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 14.6,
+      "discovered_n": 178,
+      "confirmed_pct": 4.8,
+      "confirmed_n": 62
+    },
+    {
+      "statement": "When AAPL touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 9% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 19.5,
+      "discovered_n": 82,
+      "confirmed_pct": 8.6,
+      "confirmed_n": 35
+    },
+    {
+      "statement": "When SPY touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 9% of the time",
+      "symbol": "SPY",
+      "condition": "all days",
+      "family": "pdh_rejects",
+      "discovered_pct": 11.5,
+      "discovered_n": 235,
+      "confirmed_pct": 9.1,
+      "confirmed_n": 99
+    },
+    {
+      "statement": "When IWM touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 10% of the time (daily uptrend (above 20-day average))",
+      "symbol": "IWM",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 17.2,
+      "discovered_n": 122,
+      "confirmed_pct": 9.7,
+      "confirmed_n": 62
+    },
+    {
+      "statement": "When QQQ touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 10% of the time",
+      "symbol": "QQQ",
+      "condition": "all days",
+      "family": "pdh_rejects",
+      "discovered_pct": 15.4,
+      "discovered_n": 234,
+      "confirmed_pct": 10.3,
+      "confirmed_n": 97
+    },
+    {
+      "statement": "When NVDA touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 10% of the time (daily uptrend (above 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 27.6,
+      "discovered_n": 105,
+      "confirmed_pct": 10.3,
+      "confirmed_n": 39
+    },
+    {
+      "statement": "When AMZN touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 11% of the time",
+      "symbol": "AMZN",
+      "condition": "all days",
+      "family": "pdh_rejects",
+      "discovered_pct": 12.9,
+      "discovered_n": 201,
+      "confirmed_pct": 10.6,
+      "confirmed_n": 85
+    },
+    {
+      "statement": "When IWM touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 11% of the time",
+      "symbol": "IWM",
+      "condition": "all days",
+      "family": "pdh_rejects",
+      "discovered_pct": 18.5,
+      "discovered_n": 200,
+      "confirmed_pct": 11.1,
+      "confirmed_n": 90
+    },
+    {
+      "statement": "When NVDA touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 11% of the time",
+      "symbol": "NVDA",
+      "condition": "all days",
+      "family": "pdl_rejects",
+      "discovered_pct": 24.7,
+      "discovered_n": 166,
+      "confirmed_pct": 11.2,
+      "confirmed_n": 80
+    },
+    {
+      "statement": "When these 8 names touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 12% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 13.5,
+      "discovered_n": 1160,
+      "confirmed_pct": 11.7,
+      "confirmed_n": 392
+    },
+    {
+      "statement": "When SPY touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 12% of the time (daily uptrend (above 20-day average))",
+      "symbol": "SPY",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 20.0,
+      "discovered_n": 120,
+      "confirmed_pct": 11.8,
+      "confirmed_n": 51
+    },
+    {
+      "statement": "When TSLA touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 12% of the time (daily downtrend (below 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 12.5,
+      "discovered_n": 96,
+      "confirmed_pct": 11.8,
+      "confirmed_n": 51
+    },
+    {
+      "statement": "When NVDA touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 12% of the time (daily downtrend (below 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 19.7,
+      "discovered_n": 61,
+      "confirmed_pct": 12.2,
+      "confirmed_n": 41
+    },
+    {
+      "statement": "When TSLA touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 12% of the time",
+      "symbol": "TSLA",
+      "condition": "all days",
+      "family": "pdl_rejects",
+      "discovered_pct": 14.5,
+      "discovered_n": 186,
+      "confirmed_pct": 12.5,
+      "confirmed_n": 88
+    },
+    {
+      "statement": "When these 8 names gaps UP >= 0.75 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 12% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "gap_up_0.75_fills",
+      "discovered_pct": 15.9,
+      "discovered_n": 82,
+      "confirmed_pct": 12.5,
+      "confirmed_n": 24
+    },
+    {
+      "statement": "When AAPL touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 13% of the time",
+      "symbol": "AAPL",
+      "condition": "all days",
+      "family": "pdl_rejects",
+      "discovered_pct": 18.0,
+      "discovered_n": 167,
+      "confirmed_pct": 13.0,
+      "confirmed_n": 69
+    },
+    {
+      "statement": "When NVDA gaps UP >= 0.3 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 13% of the time (daily downtrend (below 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "gap_up_0.3_fills",
+      "discovered_pct": 31.8,
+      "discovered_n": 44,
+      "confirmed_pct": 13.0,
+      "confirmed_n": 23
+    },
+    {
+      "statement": "When AAPL touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 13% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 9.8,
+      "discovered_n": 82,
+      "confirmed_pct": 13.3,
+      "confirmed_n": 30
+    },
+    {
+      "statement": "When TSLA touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 14% of the time (daily uptrend (above 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 16.7,
+      "discovered_n": 90,
+      "confirmed_pct": 13.5,
+      "confirmed_n": 37
+    },
+    {
+      "statement": "When AMZN first hour closes UP: the day's LOW is already in place \u2014 it happens 86% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 76.8,
+      "discovered_n": 69,
+      "confirmed_pct": 86.3,
+      "confirmed_n": 51
+    },
+    {
+      "statement": "When these 8 names touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 14% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "pdh_rejects",
+      "discovered_pct": 14.4,
+      "discovered_n": 1689,
+      "confirmed_pct": 14.2,
+      "confirmed_n": 705
+    },
+    {
+      "statement": "When IWM touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 14% of the time (daily downtrend (below 20-day average))",
+      "symbol": "IWM",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 20.5,
+      "discovered_n": 78,
+      "confirmed_pct": 14.3,
+      "confirmed_n": 28
+    },
+    {
+      "statement": "When these 8 names touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 14% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 17.7,
+      "discovered_n": 848,
+      "confirmed_pct": 14.4,
+      "confirmed_n": 320
+    },
+    {
+      "statement": "When NFLX touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 15% of the time (daily uptrend (above 20-day average))",
+      "symbol": "NFLX",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 14.8,
+      "discovered_n": 149,
+      "confirmed_pct": 15.0,
+      "confirmed_n": 20
+    },
+    {
+      "statement": "When AAPL touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 16% of the time",
+      "symbol": "AAPL",
+      "condition": "all days",
+      "family": "pdh_rejects",
+      "discovered_pct": 10.8,
+      "discovered_n": 212,
+      "confirmed_pct": 15.6,
+      "confirmed_n": 90
+    },
+    {
+      "statement": "When QQQ touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 16% of the time (daily uptrend (above 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 19.8,
+      "discovered_n": 121,
+      "confirmed_pct": 15.9,
+      "confirmed_n": 44
+    },
+    {
+      "statement": "When AAPL touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 17% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 11.5,
+      "discovered_n": 130,
+      "confirmed_pct": 16.7,
+      "confirmed_n": 60
+    },
+    {
+      "statement": "When NVDA touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 17% of the time (daily uptrend (above 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 12.1,
+      "discovered_n": 149,
+      "confirmed_pct": 16.7,
+      "confirmed_n": 42
+    },
+    {
+      "statement": "When TSLA touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 17% of the time (daily uptrend (above 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 17.5,
+      "discovered_n": 114,
+      "confirmed_pct": 16.7,
+      "confirmed_n": 36
+    },
+    {
+      "statement": "When these 8 names touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 17% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "pdl_rejects",
+      "discovered_pct": 18.2,
+      "discovered_n": 1385,
+      "confirmed_pct": 16.9,
+      "confirmed_n": 658
+    },
+    {
+      "statement": "When these 8 names touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 17% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 16.4,
+      "discovered_n": 529,
+      "confirmed_pct": 17.3,
+      "confirmed_n": 313
+    },
+    {
+      "statement": "When AMZN touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 18% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 10.3,
+      "discovered_n": 116,
+      "confirmed_pct": 17.5,
+      "confirmed_n": 40
+    },
+    {
+      "statement": "When SPY touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 18% of the time (daily downtrend (below 20-day average))",
+      "symbol": "SPY",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 14.9,
+      "discovered_n": 47,
+      "confirmed_pct": 17.6,
+      "confirmed_n": 34
+    },
+    {
+      "statement": "When AAPL touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 18% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 16.5,
+      "discovered_n": 85,
+      "confirmed_pct": 17.6,
+      "confirmed_n": 34
+    },
+    {
+      "statement": "When AMZN touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 18% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 11.5,
+      "discovered_n": 130,
+      "confirmed_pct": 17.8,
+      "confirmed_n": 45
+    },
+    {
+      "statement": "When NFLX touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 18% of the time (daily downtrend (below 20-day average))",
+      "symbol": "NFLX",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 24.6,
+      "discovered_n": 61,
+      "confirmed_pct": 17.8,
+      "confirmed_n": 73
+    },
+    {
+      "statement": "When NFLX touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 18% of the time",
+      "symbol": "NFLX",
+      "condition": "all days",
+      "family": "pdl_rejects",
+      "discovered_pct": 19.5,
+      "discovered_n": 154,
+      "confirmed_pct": 18.0,
+      "confirmed_n": 89
+    },
+    {
+      "statement": "When TSLA touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 18% of the time",
+      "symbol": "TSLA",
+      "condition": "all days",
+      "family": "pdh_rejects",
+      "discovered_pct": 17.3,
+      "discovered_n": 191,
+      "confirmed_pct": 18.1,
+      "confirmed_n": 83
+    },
+    {
+      "statement": "When these 8 names gaps UP >= 0.75 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 18% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "gap_up_0.75_fills",
+      "discovered_pct": 17.2,
+      "discovered_n": 145,
+      "confirmed_pct": 18.3,
+      "confirmed_n": 60
+    },
+    {
+      "statement": "When NFLX first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 81% of the time (daily downtrend (below 20-day average))",
+      "symbol": "NFLX",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 75.7,
+      "discovered_n": 74,
+      "confirmed_pct": 81.2,
+      "confirmed_n": 69
+    },
+    {
+      "statement": "When NFLX touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 19% of the time",
+      "symbol": "NFLX",
+      "condition": "all days",
+      "family": "pdh_rejects",
+      "discovered_pct": 16.0,
+      "discovered_n": 200,
+      "confirmed_pct": 18.9,
+      "confirmed_n": 74
+    },
+    {
+      "statement": "When IWM touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 19% of the time (daily uptrend (above 20-day average))",
+      "symbol": "IWM",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 12.4,
+      "discovered_n": 121,
+      "confirmed_pct": 19.0,
+      "confirmed_n": 58
+    },
+    {
+      "statement": "When TSLA touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 19% of the time (daily downtrend (below 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 16.9,
+      "discovered_n": 77,
+      "confirmed_pct": 19.1,
+      "confirmed_n": 47
+    },
+    {
+      "statement": "When these 8 names touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 19% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 19.0,
+      "discovered_n": 537,
+      "confirmed_pct": 19.2,
+      "confirmed_n": 338
+    },
+    {
+      "statement": "When AMZN touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 20% of the time",
+      "symbol": "AMZN",
+      "condition": "all days",
+      "family": "pdl_rejects",
+      "discovered_pct": 11.4,
+      "discovered_n": 175,
+      "confirmed_pct": 19.5,
+      "confirmed_n": 82
+    },
+    {
+      "statement": "When AAPL first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 80% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 67.9,
+      "discovered_n": 112,
+      "confirmed_pct": 80.4,
+      "confirmed_n": 46
+    },
+    {
+      "statement": "When QQQ touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 20% of the time",
+      "symbol": "QQQ",
+      "condition": "all days",
+      "family": "pdl_rejects",
+      "discovered_pct": 21.7,
+      "discovered_n": 175,
+      "confirmed_pct": 19.7,
+      "confirmed_n": 76
+    },
+    {
+      "statement": "When NFLX first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 80% of the time",
+      "symbol": "NFLX",
+      "condition": "all days",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 72.2,
+      "discovered_n": 223,
+      "confirmed_pct": 80.2,
+      "confirmed_n": 91
+    },
+    {
+      "statement": "When SPY touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 20% of the time",
+      "symbol": "SPY",
+      "condition": "all days",
+      "family": "pdl_rejects",
+      "discovered_pct": 21.6,
+      "discovered_n": 167,
+      "confirmed_pct": 19.8,
+      "confirmed_n": 86
+    },
+    {
+      "statement": "When QQQ touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 20% of the time (daily downtrend (below 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 17.9,
+      "discovered_n": 56,
+      "confirmed_pct": 20.0,
+      "confirmed_n": 35
+    },
+    {
+      "statement": "When AMZN first hour closes UP: the day's LOW is already in place \u2014 it happens 80% of the time",
+      "symbol": "AMZN",
+      "condition": "all days",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 70.9,
+      "discovered_n": 206,
+      "confirmed_pct": 79.8,
+      "confirmed_n": 94
+    },
+    {
+      "statement": "When NFLX touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 20% of the time (daily downtrend (below 20-day average))",
+      "symbol": "NFLX",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 19.6,
+      "discovered_n": 51,
+      "confirmed_pct": 20.4,
+      "confirmed_n": 54
+    },
+    {
+      "statement": "When IWM touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 20% of the time",
+      "symbol": "IWM",
+      "condition": "all days",
+      "family": "pdl_rejects",
+      "discovered_pct": 15.4,
+      "discovered_n": 195,
+      "confirmed_pct": 20.5,
+      "confirmed_n": 88
+    },
+    {
+      "statement": "When IWM first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 79% of the time (daily uptrend (above 20-day average))",
+      "symbol": "IWM",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 69.9,
+      "discovered_n": 133,
+      "confirmed_pct": 78.7,
+      "confirmed_n": 61
+    },
+    {
+      "statement": "When AMZN touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 21% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 13.6,
+      "discovered_n": 59,
+      "confirmed_pct": 21.4,
+      "confirmed_n": 42
+    },
+    {
+      "statement": "When these 8 names gaps DOWN >= 0.75 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 21% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "gap_down_0.75_fills",
+      "discovered_pct": 11.5,
+      "discovered_n": 78,
+      "confirmed_pct": 21.4,
+      "confirmed_n": 28
+    },
+    {
+      "statement": "When NVDA touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 22% of the time",
+      "symbol": "NVDA",
+      "condition": "all days",
+      "family": "pdh_rejects",
+      "discovered_pct": 13.9,
+      "discovered_n": 216,
+      "confirmed_pct": 21.8,
+      "confirmed_n": 87
+    },
+    {
+      "statement": "When these 8 names gaps UP >= 0.75 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 22% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "gap_up_0.75_fills",
+      "discovered_pct": 19.0,
+      "discovered_n": 63,
+      "confirmed_pct": 22.2,
+      "confirmed_n": 36
+    },
+    {
+      "statement": "When AMZN touches yesterday's HIGH: closes the day above it \u2014 it happens 78% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 64.8,
+      "discovered_n": 71,
+      "confirmed_pct": 77.5,
+      "confirmed_n": 40
+    },
+    {
+      "statement": "When NFLX first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 77% of the time (daily uptrend (above 20-day average))",
+      "symbol": "NFLX",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 70.5,
+      "discovered_n": 149,
+      "confirmed_pct": 77.3,
+      "confirmed_n": 22
+    },
+    {
+      "statement": "When IWM touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 23% of the time (daily downtrend (below 20-day average))",
+      "symbol": "IWM",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 20.3,
+      "discovered_n": 74,
+      "confirmed_pct": 23.3,
+      "confirmed_n": 30
+    },
+    {
+      "statement": "When QQQ gaps UP >= 0.3 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 24% of the time (daily uptrend (above 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "gap_up_0.3_fills",
+      "discovered_pct": 37.0,
+      "discovered_n": 81,
+      "confirmed_pct": 24.0,
+      "confirmed_n": 25
+    },
+    {
+      "statement": "When AMZN first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 76% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 66.7,
+      "discovered_n": 147,
+      "confirmed_pct": 76.0,
+      "confirmed_n": 50
+    },
+    {
+      "statement": "When AAPL first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 75% of the time",
+      "symbol": "AAPL",
+      "condition": "all days",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 65.7,
+      "discovered_n": 198,
+      "confirmed_pct": 75.3,
+      "confirmed_n": 85
+    },
+    {
+      "statement": "When QQQ touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 25% of the time (daily downtrend (below 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 25.9,
+      "discovered_n": 54,
+      "confirmed_pct": 25.0,
+      "confirmed_n": 32
+    },
+    {
+      "statement": "When TSLA first hour closes UP: the day's LOW is already in place \u2014 it happens 75% of the time (daily downtrend (below 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 73.2,
+      "discovered_n": 97,
+      "confirmed_pct": 75.0,
+      "confirmed_n": 56
+    },
+    {
+      "statement": "When QQQ gaps UP >= 0.3 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 26% of the time",
+      "symbol": "QQQ",
+      "condition": "all days",
+      "family": "gap_up_0.3_fills",
+      "discovered_pct": 39.3,
+      "discovered_n": 122,
+      "confirmed_pct": 26.4,
+      "confirmed_n": 53
+    },
+    {
+      "statement": "When NVDA touches yesterday's HIGH: rejects >= 0.3 ATR within the hour \u2014 it happens 27% of the time (daily downtrend (below 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_rejects",
+      "discovered_pct": 17.9,
+      "discovered_n": 67,
+      "confirmed_pct": 26.7,
+      "confirmed_n": 45
+    },
+    {
+      "statement": "When AMZN first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 73% of the time",
+      "symbol": "AMZN",
+      "condition": "all days",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 66.2,
+      "discovered_n": 231,
+      "confirmed_pct": 73.1,
+      "confirmed_n": 93
+    },
+    {
+      "statement": "When TSLA first hour closes UP: the day's LOW is already in place \u2014 it happens 73% of the time",
+      "symbol": "TSLA",
+      "condition": "all days",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 69.8,
+      "discovered_n": 202,
+      "confirmed_pct": 73.0,
+      "confirmed_n": 89
+    },
+    {
+      "statement": "When TSLA first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 73% of the time (daily uptrend (above 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 74.4,
+      "discovered_n": 133,
+      "confirmed_pct": 72.9,
+      "confirmed_n": 48
+    },
+    {
+      "statement": "When these 8 names first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 72% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 66.3,
+      "discovered_n": 1135,
+      "confirmed_pct": 72.2,
+      "confirmed_n": 396
+    },
+    {
+      "statement": "When NVDA gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 28% of the time",
+      "symbol": "NVDA",
+      "condition": "all days",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 35.9,
+      "discovered_n": 78,
+      "confirmed_pct": 27.8,
+      "confirmed_n": 36
+    },
+    {
+      "statement": "When AMZN first hour closes UP: the day's LOW is already in place \u2014 it happens 72% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 67.9,
+      "discovered_n": 137,
+      "confirmed_pct": 72.1,
+      "confirmed_n": 43
+    },
+    {
+      "statement": "When QQQ gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 28% of the time (daily uptrend (above 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 32.7,
+      "discovered_n": 49,
+      "confirmed_pct": 28.0,
+      "confirmed_n": 25
+    },
+    {
+      "statement": "When NVDA gaps UP >= 0.3 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 28% of the time",
+      "symbol": "NVDA",
+      "condition": "all days",
+      "family": "gap_up_0.3_fills",
+      "discovered_pct": 34.1,
+      "discovered_n": 135,
+      "confirmed_pct": 28.3,
+      "confirmed_n": 46
+    },
+    {
+      "statement": "When TSLA first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 71% of the time",
+      "symbol": "TSLA",
+      "condition": "all days",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 71.6,
+      "discovered_n": 236,
+      "confirmed_pct": 71.4,
+      "confirmed_n": 98
+    },
+    {
+      "statement": "When QQQ touches yesterday's HIGH: closes the day above it \u2014 it happens 71% of the time (daily uptrend (above 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 65.2,
+      "discovered_n": 178,
+      "confirmed_pct": 71.0,
+      "confirmed_n": 62
+    },
+    {
+      "statement": "When SPY gaps UP >= 0.3 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 29% of the time",
+      "symbol": "SPY",
+      "condition": "all days",
+      "family": "gap_up_0.3_fills",
+      "discovered_pct": 40.0,
+      "discovered_n": 125,
+      "confirmed_pct": 29.2,
+      "confirmed_n": 48
+    },
+    {
+      "statement": "When IWM first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 71% of the time",
+      "symbol": "IWM",
+      "condition": "all days",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 64.6,
+      "discovered_n": 226,
+      "confirmed_pct": 70.7,
+      "confirmed_n": 82
+    },
+    {
+      "statement": "When NFLX first hour closes UP: the day's LOW is already in place \u2014 it happens 70% of the time (daily downtrend (below 20-day average))",
+      "symbol": "NFLX",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 76.2,
+      "discovered_n": 63,
+      "confirmed_pct": 70.1,
+      "confirmed_n": 77
+    },
+    {
+      "statement": "When SPY gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 30% of the time (daily uptrend (above 20-day average))",
+      "symbol": "SPY",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 22.2,
+      "discovered_n": 54,
+      "confirmed_pct": 30.0,
+      "confirmed_n": 20
+    },
+    {
+      "statement": "When TSLA first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 70% of the time (daily downtrend (below 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 68.0,
+      "discovered_n": 103,
+      "confirmed_pct": 70.0,
+      "confirmed_n": 50
+    },
+    {
+      "statement": "When NFLX first hour closes UP: the day's LOW is already in place \u2014 it happens 70% of the time",
+      "symbol": "NFLX",
+      "condition": "all days",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 80.4,
+      "discovered_n": 214,
+      "confirmed_pct": 69.8,
+      "confirmed_n": 96
+    },
+    {
+      "statement": "When these 8 names first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 70% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 65.2,
+      "discovered_n": 1761,
+      "confirmed_pct": 69.8,
+      "confirmed_n": 719
+    },
+    {
+      "statement": "When AMZN first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 70% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 65.5,
+      "discovered_n": 84,
+      "confirmed_pct": 69.8,
+      "confirmed_n": 43
+    },
+    {
+      "statement": "When TSLA first hour closes UP: the day's LOW is already in place \u2014 it happens 70% of the time (daily uptrend (above 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 66.7,
+      "discovered_n": 105,
+      "confirmed_pct": 69.7,
+      "confirmed_n": 33
+    },
+    {
+      "statement": "When AAPL first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 69% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 62.8,
+      "discovered_n": 86,
+      "confirmed_pct": 69.2,
+      "confirmed_n": 39
+    },
+    {
+      "statement": "When QQQ touches yesterday's HIGH: closes the day above it \u2014 it happens 69% of the time",
+      "symbol": "QQQ",
+      "condition": "all days",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 66.2,
+      "discovered_n": 234,
+      "confirmed_pct": 69.1,
+      "confirmed_n": 97
+    },
+    {
+      "statement": "When AAPL first hour closes UP: the day's LOW is already in place \u2014 it happens 69% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 69.9,
+      "discovered_n": 133,
+      "confirmed_pct": 69.0,
+      "confirmed_n": 58
+    },
+    {
+      "statement": "When QQQ first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 69% of the time (daily uptrend (above 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 60.4,
+      "discovered_n": 154,
+      "confirmed_pct": 69.0,
+      "confirmed_n": 58
+    },
+    {
+      "statement": "When SPY touches yesterday's LOW: bounces >= 0.3 ATR within the hour \u2014 it happens 31% of the time (daily downtrend (below 20-day average))",
+      "symbol": "SPY",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_rejects",
+      "discovered_pct": 25.5,
+      "discovered_n": 47,
+      "confirmed_pct": 31.4,
+      "confirmed_n": 35
+    },
+    {
+      "statement": "When IWM first hour closes UP: the day's LOW is already in place \u2014 it happens 68% of the time (daily uptrend (above 20-day average))",
+      "symbol": "IWM",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 65.0,
+      "discovered_n": 137,
+      "confirmed_pct": 68.2,
+      "confirmed_n": 66
+    },
+    {
+      "statement": "When these 8 names gaps UP >= 0.3 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 32% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "gap_up_0.3_fills",
+      "discovered_pct": 39.6,
+      "discovered_n": 505,
+      "confirmed_pct": 32.1,
+      "confirmed_n": 137
+    },
+    {
+      "statement": "When these 8 names gaps DOWN >= 0.75 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 32% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "gap_down_0.75_fills",
+      "discovered_pct": 13.9,
+      "discovered_n": 151,
+      "confirmed_pct": 32.1,
+      "confirmed_n": 56
+    },
+    {
+      "statement": "When AAPL first hour closes UP: the day's LOW is already in place \u2014 it happens 68% of the time",
+      "symbol": "AAPL",
+      "condition": "all days",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 67.8,
+      "discovered_n": 239,
+      "confirmed_pct": 67.7,
+      "confirmed_n": 99
+    },
+    {
+      "statement": "When TSLA gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 32% of the time",
+      "symbol": "TSLA",
+      "condition": "all days",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 26.4,
+      "discovered_n": 72,
+      "confirmed_pct": 32.4,
+      "confirmed_n": 37
+    },
+    {
+      "statement": "When these 8 names first hour closes UP: the day's LOW is already in place \u2014 it happens 68% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 70.3,
+      "discovered_n": 593,
+      "confirmed_pct": 67.6,
+      "confirmed_n": 401
+    },
+    {
+      "statement": "When these 8 names first hour closes UP: the day's LOW is already in place \u2014 it happens 67% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 68.6,
+      "discovered_n": 1737,
+      "confirmed_pct": 67.4,
+      "confirmed_n": 774
+    },
+    {
+      "statement": "When these 8 names first hour closes UP: the day's LOW is already in place \u2014 it happens 67% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 67.7,
+      "discovered_n": 1144,
+      "confirmed_pct": 67.3,
+      "confirmed_n": 373
+    },
+    {
+      "statement": "When NVDA first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 67% of the time (daily uptrend (above 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 72.2,
+      "discovered_n": 151,
+      "confirmed_pct": 67.3,
+      "confirmed_n": 55
+    },
+    {
+      "statement": "When AMZN touches yesterday's HIGH: closes the day above it \u2014 it happens 67% of the time",
+      "symbol": "AMZN",
+      "condition": "all days",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 64.2,
+      "discovered_n": 201,
+      "confirmed_pct": 67.1,
+      "confirmed_n": 85
+    },
+    {
+      "statement": "When these 8 names first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 67% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 63.4,
+      "discovered_n": 626,
+      "confirmed_pct": 66.9,
+      "confirmed_n": 323
+    },
+    {
+      "statement": "When TSLA touches yesterday's HIGH: closes the day above it \u2014 it happens 67% of the time (daily uptrend (above 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 63.2,
+      "discovered_n": 114,
+      "confirmed_pct": 66.7,
+      "confirmed_n": 36
+    },
+    {
+      "statement": "When AMZN touches yesterday's LOW: closes the day below it \u2014 it happens 67% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 64.4,
+      "discovered_n": 59,
+      "confirmed_pct": 66.7,
+      "confirmed_n": 42
+    },
+    {
+      "statement": "When TSLA touches yesterday's LOW: closes the day below it \u2014 it happens 67% of the time (daily downtrend (below 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 66.7,
+      "discovered_n": 96,
+      "confirmed_pct": 66.7,
+      "confirmed_n": 51
+    },
+    {
+      "statement": "When QQQ first hour closes UP: the day's LOW is already in place \u2014 it happens 67% of the time (daily uptrend (above 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 63.1,
+      "discovered_n": 160,
+      "confirmed_pct": 66.7,
+      "confirmed_n": 54
+    },
+    {
+      "statement": "When these 8 names gaps UP >= 0.3 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 34% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "gap_up_0.3_fills",
+      "discovered_pct": 39.7,
+      "discovered_n": 813,
+      "confirmed_pct": 33.5,
+      "confirmed_n": 319
+    },
+    {
+      "statement": "When SPY touches yesterday's HIGH: closes the day above it \u2014 it happens 66% of the time (daily uptrend (above 20-day average))",
+      "symbol": "SPY",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 60.6,
+      "discovered_n": 188,
+      "confirmed_pct": 66.2,
+      "confirmed_n": 65
+    },
+    {
+      "statement": "When AAPL first hour closes UP: the day's LOW is already in place \u2014 it happens 66% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 65.1,
+      "discovered_n": 106,
+      "confirmed_pct": 65.9,
+      "confirmed_n": 41
+    },
+    {
+      "statement": "When QQQ touches yesterday's HIGH: closes the day above it \u2014 it happens 66% of the time (daily downtrend (below 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 69.6,
+      "discovered_n": 56,
+      "confirmed_pct": 65.7,
+      "confirmed_n": 35
+    },
+    {
+      "statement": "When IWM first hour closes UP: the day's LOW is already in place \u2014 it happens 66% of the time",
+      "symbol": "IWM",
+      "condition": "all days",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 65.1,
+      "discovered_n": 212,
+      "confirmed_pct": 65.7,
+      "confirmed_n": 105
+    },
+    {
+      "statement": "When these 8 names gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 34% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 32.6,
+      "discovered_n": 337,
+      "confirmed_pct": 34.4,
+      "confirmed_n": 128
+    },
+    {
+      "statement": "When these 8 names gaps UP >= 0.3 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 35% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "gap_up_0.3_fills",
+      "discovered_pct": 39.9,
+      "discovered_n": 308,
+      "confirmed_pct": 34.6,
+      "confirmed_n": 182
+    },
+    {
+      "statement": "When NVDA first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 65% of the time",
+      "symbol": "NVDA",
+      "condition": "all days",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 67.9,
+      "discovered_n": 221,
+      "confirmed_pct": 65.3,
+      "confirmed_n": 98
+    },
+    {
+      "statement": "When NFLX touches yesterday's HIGH: closes the day above it \u2014 it happens 65% of the time (daily uptrend (above 20-day average))",
+      "symbol": "NFLX",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 65.8,
+      "discovered_n": 149,
+      "confirmed_pct": 65.0,
+      "confirmed_n": 20
+    },
+    {
+      "statement": "When QQQ first hour closes DOWN: the day's HIGH is already in place \u2014 it happens 64% of the time",
+      "symbol": "QQQ",
+      "condition": "all days",
+      "family": "fh_down_hod_in",
+      "discovered_pct": 60.6,
+      "discovered_n": 216,
+      "confirmed_pct": 64.4,
+      "confirmed_n": 87
+    },
+    {
+      "statement": "When TSLA touches yesterday's LOW: closes the day below it \u2014 it happens 64% of the time",
+      "symbol": "TSLA",
+      "condition": "all days",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 64.0,
+      "discovered_n": 186,
+      "confirmed_pct": 63.6,
+      "confirmed_n": 88
+    },
+    {
+      "statement": "When QQQ gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 37% of the time",
+      "symbol": "QQQ",
+      "condition": "all days",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 36.0,
+      "discovered_n": 75,
+      "confirmed_pct": 36.6,
+      "confirmed_n": 41
+    },
+    {
+      "statement": "When AMZN gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 37% of the time",
+      "symbol": "AMZN",
+      "condition": "all days",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 33.3,
+      "discovered_n": 66,
+      "confirmed_pct": 36.7,
+      "confirmed_n": 30
+    },
+    {
+      "statement": "When QQQ first hour closes UP: the day's LOW is already in place \u2014 it happens 63% of the time",
+      "symbol": "QQQ",
+      "condition": "all days",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 64.7,
+      "discovered_n": 221,
+      "confirmed_pct": 63.0,
+      "confirmed_n": 100
+    },
+    {
+      "statement": "When TSLA touches yesterday's HIGH: closes the day above it \u2014 it happens 63% of the time",
+      "symbol": "TSLA",
+      "condition": "all days",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 64.9,
+      "discovered_n": 191,
+      "confirmed_pct": 62.7,
+      "confirmed_n": 83
+    },
+    {
+      "statement": "When SPY touches yesterday's HIGH: closes the day above it \u2014 it happens 63% of the time",
+      "symbol": "SPY",
+      "condition": "all days",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 63.8,
+      "discovered_n": 235,
+      "confirmed_pct": 62.6,
+      "confirmed_n": 99
+    },
+    {
+      "statement": "When IWM touches yesterday's LOW: closes the day below it \u2014 it happens 62% of the time",
+      "symbol": "IWM",
+      "condition": "all days",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 60.5,
+      "discovered_n": 195,
+      "confirmed_pct": 62.5,
+      "confirmed_n": 88
+    },
+    {
+      "statement": "When these 8 names touches yesterday's HIGH: closes the day above it \u2014 it happens 62% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 63.1,
+      "discovered_n": 1160,
+      "confirmed_pct": 62.2,
+      "confirmed_n": 392
+    },
+    {
+      "statement": "When IWM touches yesterday's LOW: closes the day below it \u2014 it happens 62% of the time (daily uptrend (above 20-day average))",
+      "symbol": "IWM",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 63.6,
+      "discovered_n": 121,
+      "confirmed_pct": 62.1,
+      "confirmed_n": 58
+    },
+    {
+      "statement": "When NVDA first hour closes UP: the day's LOW is already in place \u2014 it happens 62% of the time (daily downtrend (below 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 76.4,
+      "discovered_n": 72,
+      "confirmed_pct": 62.0,
+      "confirmed_n": 50
+    },
+    {
+      "statement": "When these 8 names gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 38% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 33.0,
+      "discovered_n": 573,
+      "confirmed_pct": 38.2,
+      "confirmed_n": 254
+    },
+    {
+      "statement": "When NVDA first hour closes UP: the day's LOW is already in place \u2014 it happens 62% of the time",
+      "symbol": "NVDA",
+      "condition": "all days",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 77.4,
+      "discovered_n": 217,
+      "confirmed_pct": 61.8,
+      "confirmed_n": 89
+    },
+    {
+      "statement": "When NVDA first hour closes UP: the day's LOW is already in place \u2014 it happens 62% of the time (daily uptrend (above 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 77.9,
+      "discovered_n": 145,
+      "confirmed_pct": 61.5,
+      "confirmed_n": 39
+    },
+    {
+      "statement": "When IWM first hour closes UP: the day's LOW is already in place \u2014 it happens 62% of the time (daily downtrend (below 20-day average))",
+      "symbol": "IWM",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 65.3,
+      "discovered_n": 75,
+      "confirmed_pct": 61.5,
+      "confirmed_n": 39
+    },
+    {
+      "statement": "When these 8 names touches yesterday's HIGH: closes the day above it \u2014 it happens 61% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 63.5,
+      "discovered_n": 1689,
+      "confirmed_pct": 61.0,
+      "confirmed_n": 705
+    },
+    {
+      "statement": "When these 8 names touches yesterday's LOW: closes the day below it \u2014 it happens 61% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 61.3,
+      "discovered_n": 537,
+      "confirmed_pct": 60.7,
+      "confirmed_n": 338
+    },
+    {
+      "statement": "When these 8 names touches yesterday's LOW: closes the day below it \u2014 it happens 60% of the time",
+      "symbol": "ALL",
+      "condition": "all days",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 57.6,
+      "discovered_n": 1385,
+      "confirmed_pct": 60.2,
+      "confirmed_n": 658
+    },
+    {
+      "statement": "When IWM touches yesterday's HIGH: closes the day above it \u2014 it happens 60% of the time",
+      "symbol": "IWM",
+      "condition": "all days",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 59.5,
+      "discovered_n": 200,
+      "confirmed_pct": 60.0,
+      "confirmed_n": 90
+    },
+    {
+      "statement": "When AAPL touches yesterday's HIGH: closes the day above it \u2014 it happens 60% of the time (daily downtrend (below 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 62.2,
+      "discovered_n": 82,
+      "confirmed_pct": 60.0,
+      "confirmed_n": 30
+    },
+    {
+      "statement": "When NVDA touches yesterday's HIGH: closes the day above it \u2014 it happens 60% of the time",
+      "symbol": "NVDA",
+      "condition": "all days",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 63.4,
+      "discovered_n": 216,
+      "confirmed_pct": 59.8,
+      "confirmed_n": 87
+    },
+    {
+      "statement": "When these 8 names touches yesterday's LOW: closes the day below it \u2014 it happens 60% of the time (daily uptrend (above 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 55.3,
+      "discovered_n": 848,
+      "confirmed_pct": 59.7,
+      "confirmed_n": 320
+    },
+    {
+      "statement": "When TSLA touches yesterday's HIGH: closes the day above it \u2014 it happens 60% of the time (daily downtrend (below 20-day average))",
+      "symbol": "TSLA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 67.5,
+      "discovered_n": 77,
+      "confirmed_pct": 59.6,
+      "confirmed_n": 47
+    },
+    {
+      "statement": "When NVDA touches yesterday's HIGH: closes the day above it \u2014 it happens 60% of the time (daily uptrend (above 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 66.4,
+      "discovered_n": 149,
+      "confirmed_pct": 59.5,
+      "confirmed_n": 42
+    },
+    {
+      "statement": "When these 8 names touches yesterday's HIGH: closes the day above it \u2014 it happens 59% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 64.3,
+      "discovered_n": 529,
+      "confirmed_pct": 59.4,
+      "confirmed_n": 313
+    },
+    {
+      "statement": "When AAPL touches yesterday's LOW: closes the day below it \u2014 it happens 59% of the time",
+      "symbol": "AAPL",
+      "condition": "all days",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 60.5,
+      "discovered_n": 167,
+      "confirmed_pct": 59.4,
+      "confirmed_n": 69
+    },
+    {
+      "statement": "When QQQ first hour closes UP: the day's LOW is already in place \u2014 it happens 59% of the time (daily downtrend (below 20-day average))",
+      "symbol": "QQQ",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "fh_up_lod_in",
+      "discovered_pct": 68.9,
+      "discovered_n": 61,
+      "confirmed_pct": 58.7,
+      "confirmed_n": 46
+    },
+    {
+      "statement": "When NVDA touches yesterday's LOW: closes the day below it \u2014 it happens 59% of the time (daily downtrend (below 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 65.6,
+      "discovered_n": 61,
+      "confirmed_pct": 58.5,
+      "confirmed_n": 41
+    },
+    {
+      "statement": "When these 8 names gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 42% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 33.5,
+      "discovered_n": 236,
+      "confirmed_pct": 42.1,
+      "confirmed_n": 126
+    },
+    {
+      "statement": "When AMZN touches yesterday's HIGH: closes the day above it \u2014 it happens 58% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AMZN",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 63.8,
+      "discovered_n": 130,
+      "confirmed_pct": 57.8,
+      "confirmed_n": 45
+    },
+    {
+      "statement": "When AAPL touches yesterday's LOW: closes the day below it \u2014 it happens 57% of the time (daily uptrend (above 20-day average))",
+      "symbol": "AAPL",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "pdl_breaks_through",
+      "discovered_pct": 62.2,
+      "discovered_n": 82,
+      "confirmed_pct": 57.1,
+      "confirmed_n": 35
+    },
+    {
+      "statement": "When these 8 names gaps DOWN >= 0.75 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 43% of the time (daily downtrend (below 20-day average))",
+      "symbol": "ALL",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "gap_down_0.75_fills",
+      "discovered_pct": 16.4,
+      "discovered_n": 73,
+      "confirmed_pct": 42.9,
+      "confirmed_n": 28
+    },
+    {
+      "statement": "When NVDA gaps UP >= 0.3 ATR at the open: trades back to yesterday's close the same day (gap fill) \u2014 it happens 43% of the time (daily uptrend (above 20-day average))",
+      "symbol": "NVDA",
+      "condition": "daily uptrend (above 20-day average)",
+      "family": "gap_up_0.3_fills",
+      "discovered_pct": 35.2,
+      "discovered_n": 91,
+      "confirmed_pct": 43.5,
+      "confirmed_n": 23
+    },
+    {
+      "statement": "When SPY gaps DOWN >= 0.3 ATR at the open: trades back up to yesterday's close the same day (gap fill) \u2014 it happens 44% of the time",
+      "symbol": "SPY",
+      "condition": "all days",
+      "family": "gap_down_0.3_fills",
+      "discovered_pct": 26.4,
+      "discovered_n": 72,
+      "confirmed_pct": 43.6,
+      "confirmed_n": 39
+    },
+    {
+      "statement": "When SPY touches yesterday's HIGH: closes the day above it \u2014 it happens 56% of the time (daily downtrend (below 20-day average))",
+      "symbol": "SPY",
+      "condition": "daily downtrend (below 20-day average)",
+      "family": "pdh_breaks_through",
+      "discovered_pct": 76.6,
+      "discovered_n": 47,
+      "confirmed_pct": 55.9,
+      "confirmed_n": 34
+    }
+  ]
+}
