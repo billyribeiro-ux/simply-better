@@ -5,6 +5,39 @@ what was adopted, what was closed, and what is parked under pre-registration.
 The DSR deflation charges `model.external_trials` (config.yaml) on top of the
 per-fold geometry × threshold search; keep that number in sync with this file.
 
+## PRE-REGISTERED: BREADTH — cross-sectional power at 50 names (declared 2026-07-10, before any ingest/run)
+
+Motivation, stated before data arrives: every within-name signal on the 8-name
+universe is exhausted (features, deep sequences, and a 5-name cross-section all
+at chance). But a 5-name cross-section is underpowered BY CONSTRUCTION — the
+canonical stat-arb result (Avellaneda-Lee) lives on hundreds of names where
+idiosyncratic dispersion gives the cross-section real degrees of freedom. The
+fix being tested is BREADTH, not another model on the same tape.
+
+Universe fixed a priori (top-liquidity US large caps across sectors, chosen by
+common knowledge NOT by backtest, alphabetical within sector; the existing 8
+stay): AAPL MSFT GOOGL AMZN META NVDA AVGO AMD CRM ORCL ADBE INTC QCOM TXN MU
+(tech), JPM BAC WFC GS MS SCHW C (financials), LLY UNH JNJ PFE MRK ABBV TMO
+(health), XOM CVX COP SLB (energy), HD WMT COST MCD NKE SBUX TGT (consumer),
+BA CAT GE UNP HON DE (industrials), TSLA NFLX DIS UBER (misc megas), SPY QQQ
+IWM DIA XLF XLK XLE (index/sector hedges) = 57 tickers.
+
+Experiment (a-priori parameters, mirrors research/statarb_spike.py exactly —
+same TRAIL=20, K=6 bars, |s|>=1.5, MIN_BARS=6, 2-factor SPY/QQQ betas, no
+tuning): pooled Spearman(s-score, forward-30min residual) across the ~49
+single names, 2024-07 -> 2026-07 (post-warmup), with session-clustered t-stat;
+plus the frozen fade rule's net expectancy at Corwin-Schultz-measured per-name
+costs (computed per name from its own bars, same estimator as the 8).
+
+Pre-registered read:
+- (a) rho <= -0.015 with clustered |t| >= 4 AND frozen fade nets > 0 at
+  measured costs -> BUILD the cross-sectional engine (pre-register its spec
+  separately before any engine run);
+- (b) direction right but weaker / costs negative -> document; bench;
+- (c) |rho| < 0.010 or wrong sign -> the breadth hypothesis is dead on liquid
+  US large caps at 5-min; STOP intraday cross-sectional research entirely.
+Trials charged: +3 (universe DOF, one run, one read) -> external_trials 197 -> 200.
+
 ## PRE-REGISTERED: MIE-DL — deep sequence model, tops & bottoms (declared 2026-07-09, before any run)
 
 Owner directive: the maximal-intelligence build on the available data. The one

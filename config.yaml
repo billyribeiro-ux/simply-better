@@ -97,7 +97,7 @@ model:
   # threshold search — full breakdown in docs/research-ledger.md
   # (148 program + 20 cycle2 + 6 concept-2 + 4 concept-3 + 2 cost-structure
   #  + 2 net-EV + 15 MIE-DL design DOF)
-  external_trials: 197
+  external_trials: 200
   params:
     num_leaves: 31
     learning_rate: 0.05
