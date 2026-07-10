@@ -7,6 +7,14 @@ per-fold geometry × threshold search; keep that number in sync with this file.
 
 ## PRE-REGISTERED: BREADTH — cross-sectional power at 50 names (declared 2026-07-10, before any ingest/run)
 
+> **PARKED BY OWNER ORDER 2026-07-10, before any run.** The mandate is the
+> original 8 tickers until the desired results are accomplished there;
+> expansion comes after. Ingest halted (partial downloads deleted; cache back
+> to the 8). No data was analyzed, so nothing was mined; the pre-registration
+> below stands unchanged for whenever the owner green-lights expansion, and
+> the +3 charged trials remain charged (conservative). Do not run without an
+> explicit owner instruction.
+
 Motivation, stated before data arrives: every within-name signal on the 8-name
 universe is exhausted (features, deep sequences, and a 5-name cross-section all
 at chance). But a 5-name cross-section is underpowered BY CONSTRUCTION — the
