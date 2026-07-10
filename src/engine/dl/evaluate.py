@@ -352,6 +352,22 @@ def write_artifacts(cfg: Config, result: dict, trade_rows: list[dict],
             w = csv.DictWriter(fh, fieldnames=keys)
             w.writeheader()
             w.writerows(trade_rows)
+        # scoreboard (owner requirement): win rate, total win/loss, net
+        taken = [r for r in trade_rows if r["taken"]]
+        if taken:
+            wins = [r for r in taken if r["pnl_r"] > 0]
+            losses = [r for r in taken if r["pnl_r"] <= 0]
+            tw = sum(r["pnl_r"] for r in wins)
+            tl = sum(r["pnl_r"] for r in losses)
+            tw_u = sum(r["pnl_usd"] or 0 for r in wins)
+            tl_u = sum(r["pnl_usd"] or 0 for r in losses)
+            with open(rep / f"dl_signals_{run_id}_SUMMARY.txt", "w") as fh:
+                fh.write(
+                    f"TRADES {len(taken)} | WINS {len(wins)} | LOSSES "
+                    f"{len(losses)} | WIN RATE {100*len(wins)/len(taken):.1f}%\n"
+                    f"TOTAL WIN  {tw:+.2f}R  ${tw_u:+.2f}\n"
+                    f"TOTAL LOSS {tl:+.2f}R  ${tl_u:+.2f}\n"
+                    f"NET PROFIT {tw+tl:+.2f}R  ${tw_u+tl_u:+.2f}\n")
     out = cfg.export_dir / "dl_eval.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w") as fh:
