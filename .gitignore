@@ -31,3 +31,4 @@ dashboard/static/data/*.json
 !dashboard/static/data/live.json
 !dashboard/static/data/paper.json
 !dashboard/static/data/dl_eval.json
+!dashboard/static/data/market_diagnosis.json

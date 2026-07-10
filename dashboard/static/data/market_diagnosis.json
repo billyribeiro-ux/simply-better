@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-07-10T12:12:58.269062+00:00",
+  "sessions": 4999,
+  "horizon_min": 15,
+  "snr_median": 0.1436,
+  "noise_to_signal": 7.0,
+  "oracle_ceiling_pct": 55.34,
+  "predictable_space_pts": 5.34,
+  "variance_ratio_2min": 0.9879,
+  "variance_ratio_6min": 0.9803,
+  "false_top_moments_per_day": 10.79,
+  "hod_at_edges_pct": 51.9,
+  "lod_at_edges_pct": 51.4,
+  "reading": "Oracle ceiling is the accuracy of perfect advance knowledge of the day's direction; the gap between 50% and it is ALL the predictability the tape contains at this horizon. Variance ratio 1.0 = random walk."
+}

@@ -1,6 +1,7 @@
 """CLI: mie ingest | mie run | mie all | mie train | mie live"""
 from __future__ import annotations
 
+import json
 import logging
 import time as time_mod
 from datetime import date, datetime, time
@@ -268,6 +269,15 @@ def daily(
     typer.echo(f"retrained through {today}: labeled={new_bundle.n_labeled} "
                f"thr={new_bundle.fm.threshold:.3f} rules={len(new_bundle.rules)}")
 
+    # 3.4 nightly self-diagnosis: the machine re-measures its market's
+    # predictability bounds on the fresh tape and publishes them
+    try:
+        from . import diagnose as diag_mod
+        diag_mod.write(cfg, diag_mod.run(cfg))
+        typer.echo("market self-diagnosis refreshed")
+    except Exception as exc:                      # never block the loop
+        typer.echo(f"self-diagnosis skipped: {exc}")
+
     # 3.5 MIE-DL nightly warm-start refit (self-learning) — gates-controlled
     if bool(cfg.raw.get("dl", {}).get("enabled", False)):
         try:
@@ -301,6 +311,20 @@ def run_all(
     artifacts = run_pipeline(cfg, a, b)
     export_mod.write(cfg, artifacts)
     typer.echo("done")
+
+
+@app.command()
+def diagnose(
+    config: str = typer.Option("config.yaml", "--config"),
+) -> None:
+    """Self-diagnosis: measure the tape's predictability bounds (SNR, oracle
+    ceiling, variance ratios, HOD/LOD structure) and publish to the dashboard."""
+    from . import diagnose as diag_mod
+    cfg = load_config(config)
+    diag = diag_mod.run(cfg)
+    path = diag_mod.write(cfg, diag)
+    typer.echo(json.dumps(diag, indent=2))
+    typer.echo(f"-> {path}")
 
 
 # --------------------------------------------------------------------------
