@@ -139,8 +139,20 @@ def _momentum_baseline(cfg, caches, samples, te_rows) -> dict:
 # ---------------------------------------------------------------------------
 # the run
 # ---------------------------------------------------------------------------
+def _ckpt_dir(cfg: Config, H: int) -> Path:
+    """Per-fold checkpoints (restart resilience). Restored folds are valid
+    because same-seed fits are byte-identical (pinned by test_dl_causality and
+    reproduced across two independent production runs)."""
+    d = cfg.root / "data" / "dl" / ("eval_ckpt" if H == 15 else f"eval_ckpt_h{H}")
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
 def run_eval(cfg: Config, *, horizon_min: int | None = None,
-             shuffle_control: bool = True) -> dict:
+             shuffle_control: bool = True, fresh: bool = False) -> dict:
+    import os
+    import pickle
+
     from . import require_torch
     require_torch()
     from .train import fit, predict_scores, model_from_bundle
@@ -152,9 +164,22 @@ def run_eval(cfg: Config, *, horizon_min: int | None = None,
     caches = build_caches(cfg)
     sessions = _sessions(caches)
     H = int(horizon_min or dl["horizon_min"])
+    ckpt = _ckpt_dir(cfg, H)
+    if fresh:
+        for f in ckpt.glob("*.pkl"):
+            f.unlink()
 
     folds_out, trade_rows_all = [], []
     for fi, (train_thru, te_a, te_b) in enumerate(FOLDS, start=1):
+        cpath = ckpt / f"fold_{fi}.pkl"
+        if cpath.exists():
+            with open(cpath, "rb") as fh:
+                saved = pickle.load(fh)
+            folds_out.append(saved["met"])
+            trade_rows_all.extend(saved["trade_rows"])
+            log.info("fold %d restored from checkpoint (auc=%s)",
+                     fi, saved["met"]["auc_up_down"])
+            continue
         te_a_d, te_b_d = date.fromisoformat(te_a), date.fromisoformat(te_b)
         d_to = _embargoed_train_end(sessions, te_a_d, embargo)
         log.info("fold %d: train %s -> %s (embargoed), test %s -> %s",
@@ -186,8 +211,14 @@ def run_eval(cfg: Config, *, horizon_min: int | None = None,
         log.info("fold %d metrics: %s", fi, {k: met[k] for k in
                  ("auc_up_down", "rank_ic", "ic_t_clustered", "n")})
         # Gate-B trade replay with this fold's frozen bundle
-        trade_rows_all.extend(build_trade_rows(
-            cfg, caches, te_samples, rows, scores, bundle, fold=f"F{fi}"))
+        fold_trades = build_trade_rows(
+            cfg, caches, te_samples, rows, scores, bundle, fold=f"F{fi}")
+        trade_rows_all.extend(fold_trades)
+        # atomic per-fold checkpoint: a restart resumes here, not from zero
+        tmp = str(cpath) + ".tmp"
+        with open(tmp, "wb") as fh:
+            pickle.dump({"met": met, "trade_rows": fold_trades}, fh)
+        os.replace(tmp, cpath)
 
     # pooled Gate A metrics
     aucs = [f["auc_up_down"] for f in folds_out]
@@ -200,7 +231,17 @@ def run_eval(cfg: Config, *, horizon_min: int | None = None,
     # label-shuffle control on fold 1 (certifies the pipeline)
     shuffle_auc = None
     if shuffle_control:
-        shuffle_auc = _shuffle_control(cfg, caches, sessions, embargo, H)
+        spath = ckpt / "shuffle.pkl"
+        if spath.exists():
+            with open(spath, "rb") as fh:
+                shuffle_auc = pickle.load(fh)
+            log.info("shuffle control restored from checkpoint (%s)", shuffle_auc)
+        else:
+            shuffle_auc = _shuffle_control(cfg, caches, sessions, embargo, H)
+            tmp = str(spath) + ".tmp"
+            with open(tmp, "wb") as fh:
+                pickle.dump(shuffle_auc, fh)
+            os.replace(tmp, spath)
 
     taken = [r for r in trade_rows_all if r["taken"]]
     gate_b = _gate_b_stats(taken)

@@ -312,16 +312,20 @@ def dl_eval(
     horizon: int = typer.Option(0, "--horizon",
                                 help="override label horizon (0 = config)"),
     no_shuffle: bool = typer.Option(False, "--no-shuffle-control"),
+    fresh: bool = typer.Option(False, "--fresh",
+                               help="discard fold checkpoints, recompute all"),
 ) -> None:
     """The pre-registered 7-fold evaluation. Prints the gate table; adopts
-    NOTHING automatically — flipping dl.enabled requires the ledger verdict."""
+    NOTHING automatically — flipping dl.enabled requires the ledger verdict.
+    Per-fold checkpoints make the run restart-proof (resume by default)."""
     import json as json_mod
     import uuid
 
     from .dl.evaluate import run_eval, write_artifacts
     cfg = load_config(config)
     result, trade_rows = run_eval(
-        cfg, horizon_min=horizon or None, shuffle_control=not no_shuffle)
+        cfg, horizon_min=horizon or None, shuffle_control=not no_shuffle,
+        fresh=fresh)
     run_id = uuid.uuid4().hex[:12]
     write_artifacts(cfg, result, trade_rows, run_id)
     typer.echo(f"\ndl-eval {run_id}  horizon={result['horizon_min']}min  "
