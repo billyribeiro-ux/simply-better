@@ -67,6 +67,34 @@ Pre-registered read:
   US large caps at 5-min; STOP intraday cross-sectional research entirely.
 Trials charged: +3 (universe DOF, one run, one read) -> external_trials 197 -> 200.
 
+## 2026-07-10 — MIE-DL SECONDARY HORIZON (H=30) VERDICT: Gate A FAILS — program complete
+
+The declared secondary horizon ran once, checkpointed, and is reported as
+committed (adoption or not): per-fold AUC 0.5029 / 0.5137 / 0.5029 / 0.5007 /
+**0.5347** / 0.5109 / 0.4983. Pooled AUC **0.509** (< 0.530 — FAIL); folds
+>0.50: 6/7 (pass); pooled rank-IC **+0.0167** (< +0.020 — FAIL, narrowly);
+shuffle control 0.5029 (clean). Gate B informational: 460 trades, −0.1204R
+(CI [−0.215, −0.024], excludes zero on the WRONG side), net −$74.77 @1sh.
+
+Reading, recorded honestly: H=30 is measurably stronger than H=15 (pooled AUC
+0.509 vs 0.504, IC 0.017 vs 0.009; fold 5 alone hit AUC 0.535 / IC 0.066) —
+the longer horizon carries slightly more structure, exactly the whisper
+pattern — but it fails the pre-registered bar, is regime-unstable (fold 7
+back to chance), and the trade layer LOSES money on it with a zero-excluding
+negative CI. Null recorded. **This completes every declared DL experiment on
+this range. The within-range research program has reached its pre-registered
+evidence ceiling: no further variant, horizon, architecture, or parameter may
+be tried on 2024-01→2026-07 data without restarting the multiplicity clock —
+and the accumulated evidence (features, sequences, cross-section at 5 and 50
+names, two horizons) says further mining would only manufacture noise.**
+
+Standing state: v4 (execution-aware net-EV breaks) is the shipping spec — the
+only configuration with a positive, CI-backed record. The nightly daily-loop
+continues as the FORWARD research device: each new session is virgin data for
+the paper record, which is the only instrument that can certify (or refute)
+v4's edge. Genuinely new alpha on this universe requires new INFORMATION
+(order flow / options / news), not new mathematics on the same bars.
+
 ## 2026-07-10 — MIE-DL VERDICT (run d4d17987d8de): Gate A FAILS — null recorded
 
 The pre-registered 7-fold evaluation completed (74.8 min wall, per-fold

@@ -1,93 +1,93 @@
 {
-  "run_id": "d4d17987d8de",
+  "run_id": "4484c2fd5f84",
   "folds": [
     {
       "fold": "1",
-      "auc_test": 0.5017,
+      "auc_test": 0.5029,
       "auc_val": null,
       "threshold": 0.05,
-      "n_test": 30141,
+      "n_test": 30092,
       "prob_hist": []
     },
     {
       "fold": "2",
-      "auc_test": 0.4994,
+      "auc_test": 0.5137,
       "auc_val": null,
       "threshold": 0.15,
-      "n_test": 28789,
+      "n_test": 28787,
       "prob_hist": []
     },
     {
       "fold": "3",
-      "auc_test": 0.4976,
+      "auc_test": 0.5029,
       "auc_val": null,
-      "threshold": 0.15,
+      "threshold": 0.05,
       "n_test": 29756,
       "prob_hist": []
     },
     {
       "fold": "4",
-      "auc_test": 0.5024,
+      "auc_test": 0.5007,
       "auc_val": null,
-      "threshold": 0.1,
-      "n_test": 30455,
+      "threshold": 0.2,
+      "n_test": 30431,
       "prob_hist": []
     },
     {
       "fold": "5",
-      "auc_test": 0.512,
+      "auc_test": 0.5347,
       "auc_val": null,
-      "threshold": 0.1,
-      "n_test": 30190,
+      "threshold": 0.15,
+      "n_test": 30142,
       "prob_hist": []
     },
     {
       "fold": "6",
-      "auc_test": 0.5136,
+      "auc_test": 0.5109,
       "auc_val": null,
-      "threshold": 0.15,
+      "threshold": 0.2,
       "n_test": 29276,
       "prob_hist": []
     },
     {
       "fold": "7",
-      "auc_test": 0.5,
+      "auc_test": 0.4983,
       "auc_val": null,
-      "threshold": 0.1,
+      "threshold": 0.2,
       "n_test": 32639,
       "prob_hist": []
     }
   ],
   "pooled": {
-    "auc_up_down": 0.5038,
-    "rank_ic": 0.0086,
-    "per_fold_auc_gt_050": 4,
+    "auc_up_down": 0.509,
+    "rank_ic": 0.0167,
+    "per_fold_auc_gt_050": 6,
     "ic_t_per_fold": [
-      0.62,
-      0.56,
-      0.83,
-      2.5,
-      2.29,
-      3.29,
-      4.29
+      1.0,
+      1.26,
+      -0.43,
+      1.56,
+      2.58,
+      2.34,
+      -0.58
     ]
   },
   "gate_a": {
     "pooled_auc_ge_0530": false,
-    "folds_gt_050_ge_5of7": false,
+    "folds_gt_050_ge_5of7": true,
     "pooled_ic_ge_0020": false,
     "shuffle_in_band": true,
     "PASS": false
   },
   "gate_b": {
-    "n_trades": 401,
-    "expectancy_r": -0.0933,
+    "n_trades": 460,
+    "expectancy_r": -0.1204,
     "exp_ci": [
-      -0.2065,
-      0.0229
+      -0.2151,
+      -0.0242
     ],
-    "net_usd": -48.01,
-    "max_dd_usd": 57.14,
+    "net_usd": -74.77,
+    "max_dd_usd": 82.57,
     "PASS": "False"
   }
 }
