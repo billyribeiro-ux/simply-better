@@ -19,6 +19,23 @@ per-fold geometry × threshold search; keep that number in sync with this file.
 > restarted; the spike runs exactly as pre-registered below, unchanged. The
 > 8-ticker MIE-DL verdict chain continues in parallel and retains priority.
 
+**VERDICT (2026-07-10, research/breadth_spike.py): outcome (c) — DEAD.**
+All 49 tickers ingested cleanly (zero failures). 1,997,900 observations across
+50 single names, 611 sessions, per-name Corwin-Schultz costs measured from each
+name's own bars. Results against the pre-registered criteria:
+- pooled Spearman(s-score, fwd 30-min residual) = **+0.0084** — WRONG SIGN
+  (weak momentum, not reversion; the tiny p-value only reflects n≈2M);
+- session-clustered per-session IC mean −0.0035, t = −1.51 — not significant
+  in either direction;
+- frozen fade rule (419,748 trades): **−0.47 bps/trade GROSS**, −7.71 net,
+  CI [−8.03, −7.37].
+Criterion (c) fires twice over (|rho| direction wrong; fade loses before
+costs). **Intraday cross-sectional research on liquid US large caps at 5-min
+resolution is closed — breadth does not rescue it.** The 5-name null was not
+underpowered after all; the dislocation-reversion mechanism simply is not
+present at this resolution on this asset class. Data retained (owner pays for
+it) for any future non-intraday or non-cross-sectional use.
+
 Motivation, stated before data arrives: every within-name signal on the 8-name
 universe is exhausted (features, deep sequences, and a 5-name cross-section all
 at chance). But a 5-name cross-section is underpowered BY CONSTRUCTION — the
