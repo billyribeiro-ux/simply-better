@@ -1,0 +1,93 @@
+{
+  "run_id": "d4d17987d8de",
+  "folds": [
+    {
+      "fold": "1",
+      "auc_test": 0.5017,
+      "auc_val": null,
+      "threshold": 0.05,
+      "n_test": 30141,
+      "prob_hist": []
+    },
+    {
+      "fold": "2",
+      "auc_test": 0.4994,
+      "auc_val": null,
+      "threshold": 0.15,
+      "n_test": 28789,
+      "prob_hist": []
+    },
+    {
+      "fold": "3",
+      "auc_test": 0.4976,
+      "auc_val": null,
+      "threshold": 0.15,
+      "n_test": 29756,
+      "prob_hist": []
+    },
+    {
+      "fold": "4",
+      "auc_test": 0.5024,
+      "auc_val": null,
+      "threshold": 0.1,
+      "n_test": 30455,
+      "prob_hist": []
+    },
+    {
+      "fold": "5",
+      "auc_test": 0.512,
+      "auc_val": null,
+      "threshold": 0.1,
+      "n_test": 30190,
+      "prob_hist": []
+    },
+    {
+      "fold": "6",
+      "auc_test": 0.5136,
+      "auc_val": null,
+      "threshold": 0.15,
+      "n_test": 29276,
+      "prob_hist": []
+    },
+    {
+      "fold": "7",
+      "auc_test": 0.5,
+      "auc_val": null,
+      "threshold": 0.1,
+      "n_test": 32639,
+      "prob_hist": []
+    }
+  ],
+  "pooled": {
+    "auc_up_down": 0.5038,
+    "rank_ic": 0.0086,
+    "per_fold_auc_gt_050": 4,
+    "ic_t_per_fold": [
+      0.62,
+      0.56,
+      0.83,
+      2.5,
+      2.29,
+      3.29,
+      4.29
+    ]
+  },
+  "gate_a": {
+    "pooled_auc_ge_0530": false,
+    "folds_gt_050_ge_5of7": false,
+    "pooled_ic_ge_0020": false,
+    "shuffle_in_band": true,
+    "PASS": false
+  },
+  "gate_b": {
+    "n_trades": 401,
+    "expectancy_r": -0.0933,
+    "exp_ci": [
+      -0.2065,
+      0.0229
+    ],
+    "net_usd": -48.01,
+    "max_dd_usd": 57.14,
+    "PASS": "False"
+  }
+}

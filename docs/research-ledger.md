@@ -67,6 +67,42 @@ Pre-registered read:
   US large caps at 5-min; STOP intraday cross-sectional research entirely.
 Trials charged: +3 (universe DOF, one run, one read) -> external_trials 197 -> 200.
 
+## 2026-07-10 — MIE-DL VERDICT (run d4d17987d8de): Gate A FAILS — null recorded
+
+The pre-registered 7-fold evaluation completed (74.8 min wall, per-fold
+checkpointed after two container restarts; folds 1–5 byte-identical across
+three independent runs — production proof of the determinism guarantee).
+
+Per-fold held-out results (up-vs-down AUC / rank-IC / session-clustered t):
+
+| fold | test window | AUC | rank-IC | IC t | n |
+| ---- | ----------- | --- | ------- | ---- | - |
+| 1 | 2024-10..12 | 0.5017 | +0.0026 | 0.62 | 30,141 |
+| 2 | 2025-01..03 | 0.4994 | +0.0044 | 0.56 | 28,789 |
+| 3 | 2025-04..06 | 0.4976 | −0.0029 | 0.83 | 29,756 |
+| 4 | 2025-07..09 | 0.5024 | +0.0082 | 2.50 | 30,455 |
+| 5 | 2025-10..12 | 0.5120 | +0.0217 | 2.29 | 30,190 |
+| 6 | 2026-01..03 | 0.5136 | +0.0267 | 3.29 | 29,276 |
+| 7 | 2026-04..07 | 0.5000 | +0.0001 | 4.29 | 32,639 |
+
+**Gate A: FAIL on all three skill prongs.** Pooled AUC 0.5038 (< 0.530);
+folds > 0.50: 4/7 (< 5); pooled rank-IC +0.0086 (< +0.020). Shuffle control
+0.5017 ∈ [0.48, 0.52] — the pipeline is certified clean, so the null is a
+property of the data, not the harness. Gate B (informational only, never
+authoritative once A fails): 401 gated trades, −0.0933R, net −$48 @1sh.
+
+Honest texture, recorded without spin: the per-session IC t-statistic RISES
+with training data (0.6 → 2.5 → 3.3 → 4.3), i.e. with enough history the
+model finds a faint, consistent whisper of structure — but the effect size
+(IC ≈ +0.01–0.03) is a third of the pre-registered bar, collapsed to +0.0001
+in the newest quarter, and the trade layer loses money on it. A whisper is
+not an edge. **Per the pre-registration: null recorded, `dl.enabled` stays
+false, v4 remains the shipping spec, the infrastructure persists.** The ML's
+full blotter for 2026-Q2 was generated for owner chart-comparison
+(reports/dl_blotter_2026Q2.csv, 401-trade gated stream −0.09R). Next: the
+declared secondary horizon (H=30) runs once, reported regardless of outcome;
+no other DL variant may be tried on this range.
+
 ## PRE-REGISTERED: MIE-DL — deep sequence model, tops & bottoms (declared 2026-07-09, before any run)
 
 Owner directive: the maximal-intelligence build on the available data. The one

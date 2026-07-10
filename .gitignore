@@ -30,3 +30,4 @@ dashboard/static/data/*.json
 !dashboard/static/data/attribution.json
 !dashboard/static/data/live.json
 !dashboard/static/data/paper.json
+!dashboard/static/data/dl_eval.json

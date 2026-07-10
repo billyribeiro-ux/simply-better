@@ -333,7 +333,8 @@ def dl_eval(
     typer.echo(json_mod.dumps({"pooled": result["pooled"],
                                "shuffle_control_auc": result["shuffle_control_auc"],
                                "gate_a": result["gate_a"],
-                               "gate_b": result["gate_b"]}, indent=2))
+                               "gate_b": result["gate_b"]},
+                              indent=2, default=str))  # numpy bools -> str
 
 
 @app.command("dl-train")
