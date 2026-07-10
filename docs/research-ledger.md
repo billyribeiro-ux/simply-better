@@ -14,6 +14,10 @@ per-fold geometry × threshold search; keep that number in sync with this file.
 > below stands unchanged for whenever the owner green-lights expansion, and
 > the +3 charged trials remain charged (conservative). Do not run without an
 > explicit owner instruction.
+>
+> **GREEN-LIT BY OWNER 2026-07-10** ("You have my green light"). Ingest
+> restarted; the spike runs exactly as pre-registered below, unchanged. The
+> 8-ticker MIE-DL verdict chain continues in parallel and retains priority.
 
 Motivation, stated before data arrives: every within-name signal on the 8-name
 universe is exhausted (features, deep sequences, and a 5-name cross-section all
