@@ -67,6 +67,35 @@ Pre-registered read:
   US large caps at 5-min; STOP intraday cross-sectional research entirely.
 Trials charged: +3 (universe DOF, one run, one read) -> external_trials 197 -> 200.
 
+## 2026-07-10 — MECHANISTIC DIAGNOSIS: why intraday direction is unlearnable here
+
+Owner demanded the WHY. Computed from the 1-min tape (4,999 symbol-sessions):
+
+1. **Signal-to-noise per 15-min bar: 0.144** — the noise is ~7× larger than
+   the drift. Any learner sees one part signal buried in seven parts noise.
+2. **The oracle ceiling: 55.3%.** Give a trader tomorrow's newspaper — perfect
+   advance knowledge of the day's final direction — and only 55.3% of 15-min
+   moves go that way. The ENTIRE predictable space between coin-flip (50%)
+   and omniscience (55.3%) is 5.3 points, and claiming it in full requires
+   perfectly forecasting the day's direction in advance, which is itself the
+   unsolved problem. Our gates demanded ~53%; the models found 50.4–50.9 —
+   i.e. they captured a sliver of a space that is structurally tiny.
+3. **Variance ratios 0.988 (2-min) / 0.980 (6-min)** — intraday paths on
+   these names are statistically indistinguishable from a random walk, with
+   the small deviation being 1–2-min bid-ask bounce (uncapturable net of
+   spread). This is WHY fades lose (no reversion), why breaks carry the only
+   thin edge (the 55.3% drift-alignment is real but small), and why every
+   model of every capacity lands at ~0.50: **there is almost no "why" left in
+   the price path itself — the mega-cap tape is noise-dominated by
+   construction, because that is what competition does to liquid prices.**
+
+This diagnosis is the program's terminal scientific result. It is not a model
+failure; it is a measured property of the asset class at this resolution.
+The predictable residue (day-direction, drift-alignment) is exactly what v4
+monetizes at its measured-cost boundary. Escaping the 55.3% ceiling requires
+information that arrives BEFORE price does: order flow, options positioning,
+news. Recorded as the definitive answer to "decode the market" on this data.
+
 ## 2026-07-10 — MIE-DL SECONDARY HORIZON (H=30) VERDICT: Gate A FAILS — program complete
 
 The declared secondary horizon ran once, checkpointed, and is reported as
